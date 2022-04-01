@@ -32,8 +32,7 @@ public class JwtUtil implements Serializable {
 
     private static final int DATA_EXPIRACAO_TOKEN = 1000 * 60 * 60 * 24 * 7;//7dias
     private static final long DATA_EXPIRACAO_REFRESH_TOKEN = 1000L * 60 * 60 * 24 * 30;//30dias
-        private static final int TEMPO_EXPIRACAO_TOKEN_VALIDACAO = 1000 * 60 * 15;//15min
-//    private static final int TEMPO_EXPIRACAO_TOKEN_VALIDACAO = 1000 * 15;//15s (para testes)
+    private static final int TEMPO_EXPIRACAO_TOKEN_VALIDACAO = 1000 * 60 * 15;//15min
     public static final String PERMISSOES = "permissoes";
     public static final String URL_VALIDACAO_REGISTRO = "http://localhost:8080/usuarios/permitAll/validar-registro/";
 

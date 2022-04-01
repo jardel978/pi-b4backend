@@ -16,21 +16,27 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 import static org.springframework.http.HttpMethod.*;
 
 @Component
 @EnableWebSecurity
-//@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final String[] ROTAS_PERMIT_ALL = {"/login/**", "/usuarios/permitAll/**", "/produtos/permitAll/**"
-            , "/categorias/permitAll/**", "/cidades/permitAll/**"};
+            , "/categorias/permitAll/**", "/cidades/permitAll/**", "/clientes/permitAll/**", "/v3/api-docs/**",
+            "/swagger-ui/**", "/swagger-ui.html", "/webjars/swagger-ui/**"};
 
     private static final String[] ROLES_USER = {"ROLE_USER"};
-    private static final String[] ROLES_ADMIN = {"ROLE_USER", "ROLE_ADMIN"};
+    private static final String[] ROLES_ADMIN = {"ROLE_ADMIN"};
 
-    private static final String[] ROTAS_USER = {"/reservas/cliente/**", "/clientes/**"};
+    private static final String[] ROTAS_USER = {"/reservas/cliente/**", "/clientes/**", "/usuarios/atualizar/alterar" +
+            "-senha"};
 
     private static final String[] ROTAS_ADMIN = {"/usuarios/**", "/reservas/**", "/produtos/**", "/imagens/**",
             "/funcoes/**", "/clientes/**", "/cidades/**", "/categorias/**", "/caracteristicas/**"};
@@ -70,11 +76,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers(PUT, ROTAS_ADMIN).hasAnyAuthority(ROLES_ADMIN);
         http.authorizeRequests().antMatchers(DELETE, ROTAS_ADMIN).hasAnyAuthority(ROLES_ADMIN);
 
-//        http.authorizeRequests().antMatchers(GET, "/reservas/**", "/cidades/**",
-//                "/imagens/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER");
-//
-//        http.authorizeRequests().antMatchers(POST, "/reservas/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER");
-
         http.authorizeRequests().anyRequest().authenticated();
 //        http.formLogin();
         http.addFilter(new JwtFiltroAutenticacao(authenticationManagerBean()));
@@ -84,15 +85,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     }
 
-
-//    @Bean
-//    CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration().applyPermitDefaultValues();
-//        configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "DELETE", "OPTIONS"));
-//        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//        return source;
-//    }
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration().applyPermitDefaultValues();
+        configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "DELETE", "OPTIONS"));
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     @Override

@@ -2,6 +2,8 @@ package com.digitalbooking.projetointegrador.service;
 
 import com.digitalbooking.projetointegrador.dto.ClienteDTO;
 import com.digitalbooking.projetointegrador.model.Cliente;
+import com.digitalbooking.projetointegrador.model.Usuario;
+import com.digitalbooking.projetointegrador.model.enums.NomeFuncao;
 import com.digitalbooking.projetointegrador.repository.IClienteRepository;
 import com.digitalbooking.projetointegrador.security.JwtUtil;
 import com.digitalbooking.projetointegrador.service.exception.DadoNaoEncontradoException;
@@ -18,7 +20,8 @@ import org.springframework.stereotype.Service;
  */
 
 @Service
-public class ClienteService extends UsuarioService {
+//public class ClienteService extends UsuarioService {
+public class ClienteService {
 
     @Autowired
     private IClienteRepository clienteRepository;
@@ -51,6 +54,8 @@ public class ClienteService extends UsuarioService {
         emailService.enviarEmail(emailService.gerarEmailDeValidacao(tokenValidacao, clienteSalvo.getEmail()));
     }
 
+    //BUSCAR TODOS PARA USO ADMIN
+
     /**
      * Metodo para busca de cliente por id.
      *
@@ -71,24 +76,30 @@ public class ClienteService extends UsuarioService {
      * @since 1.0
      */
     public void atualizar(ClienteDTO clienteDTO) {
-        Cliente clienteModel =
+        Cliente clienteDaBase =
                 clienteRepository.findById(clienteDTO.getId()).orElseThrow(() -> new DadoNaoEncontradoException("Usuário " +
                         "não encontrado. Tipo: " + Cliente.class.getName()));
-        clienteDTO.setSenha(clienteModel.getSenha());
-        salvar(clienteDTO);
+        clienteDTO.setSenha(clienteDaBase.getSenha());
+        Cliente clienteModel = modelMapper.map(clienteDTO, Cliente.class);
+        if (clienteDaBase.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)//evita que um user possa mudar sua função
+                && !clienteDTO.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)) {
+            clienteModel.setFuncao(clienteDaBase.getFuncao());
+        }
+        clienteRepository.save(clienteModel);
     }
 
-//    /**
-//     * Metodo para deletar um usuario.
-//     *
-//     * @param id Chave identificadora do usuario que deve ser deletado.
-//     * @since 1.0
-//     */
-//    @Override
-//    public void deletar(Long id) {
-//        clienteRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException("Usuário não " +
-//                "encontrado. Tipo: " + Cliente.class.getName()));
-//        clienteRepository.deleteById(id);
-//    }
+    /**
+     * Metodo para deletar um cliente.
+     *
+     * @param id Chave identificadora do cliente que deve ser deletado.
+     * @since 1.0
+     */
+    public void deletar(Long id) {
+        clienteRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException("Cliente não " +
+                "encontrado. Tipo: " + Usuario.class.getName()));
+        //implementar lógica de verificar se o cliente pode ser deletado
+
+        clienteRepository.deleteById(id);
+    }
 
 }

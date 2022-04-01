@@ -3,6 +3,7 @@ package com.digitalbooking.projetointegrador.service;
 import com.digitalbooking.projetointegrador.dto.NovaSenhaDTO;
 import com.digitalbooking.projetointegrador.dto.UsuarioDTO;
 import com.digitalbooking.projetointegrador.model.Usuario;
+import com.digitalbooking.projetointegrador.model.enums.NomeFuncao;
 import com.digitalbooking.projetointegrador.repository.IUsuarioRepository;
 import com.digitalbooking.projetointegrador.security.JwtUtil;
 import com.digitalbooking.projetointegrador.security.exception.GenericoTokenException;
@@ -112,11 +113,16 @@ public class UsuarioService implements UserDetailsService {
      * @since 1.0
      */
     public void atualizar(UsuarioDTO usuarioDTO) {
-        Usuario usuarioModel =
+        Usuario usuarioDaBase =
                 usuarioRepository.findById(usuarioDTO.getId()).orElseThrow(() -> new DadoNaoEncontradoException("Usuário " +
                         "não encontrado. Tipo: " + Usuario.class.getName()));
-        usuarioDTO.setSenha(usuarioModel.getSenha());
-        salvar(usuarioDTO);
+        usuarioDTO.setSenha(usuarioDaBase.getSenha());
+        Usuario usuarioModel = modelMapper.map(usuarioDTO, Usuario.class);
+        if (usuarioDaBase.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)//evita que um user possa mudar sua função
+                && !usuarioDTO.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)) {
+            usuarioModel.setFuncao(usuarioDaBase.getFuncao());
+        }
+        usuarioRepository.save(usuarioModel);
     }
 
     /**
@@ -125,7 +131,6 @@ public class UsuarioService implements UserDetailsService {
      * @param novaSenhaDTO Objeto contendo a senha atual que deve ser substituida pela nova senha
      */
     public void atualizarSenha(NovaSenhaDTO novaSenhaDTO) {
-        //implementar
         Usuario usuario =
                 usuarioRepository.findByEmail(novaSenhaDTO.getEmail()).orElseThrow(() -> new DadoNaoEncontradoException("Falha" +
                         " ao tentar validar registro do usuário com email: " +
@@ -133,10 +138,10 @@ public class UsuarioService implements UserDetailsService {
         boolean senhaAtualEstaCorreta = passwordEncoder.matches(usuario.getSenha(), novaSenhaDTO.getSenhaAtual());
         if (senhaAtualEstaCorreta) {
             usuario.setSenha(passwordEncoder.encode(novaSenhaDTO.getSenhaNova()));
+            usuarioRepository.save(usuario);
         } else {
             throw new SenhaIncoretaException("Falha ao atualizar senha! A senha atual está incorreta.");
         }
-        usuarioRepository.save(usuario);
     }
 
     /**

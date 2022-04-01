@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import javax.validation.Valid;
 @RequestMapping("/imagens")
 //SpringDoc documentação
 @Tag(name = "Imagens", description = "API REST Imagens")
+@SecurityRequirement(name = "apidigitalbooking")
 public class ImagemController {
 
     @Autowired

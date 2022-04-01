@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import javax.validation.Valid;
 @RequestMapping("/caracteristicas")
 //SpringDoc documentação
 @Tag(name = "Caracteristicas", description = "API REST Caracteristicas")
+@SecurityRequirement(name = "apidigitalbooking")
 public class CaracteristicaController {
 
     @Autowired
@@ -47,9 +49,9 @@ public class CaracteristicaController {
      * @since 1.0
      */
     //SpringDoc documentação
-    @Operation(summary = "Salva uma caracteristica")
+    @Operation(summary = "Salva uma característica")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Cidade salva", content = @Content),
+            @ApiResponse(responseCode = "201", description = "Característica salva", content = @Content),
             @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
                     content = @Content(schema = @Schema(implementation = HandlerError.class))),
             @ApiResponse(responseCode = "403", description = "Você não tem permissão para acessar este recurso",
@@ -76,9 +78,9 @@ public class CaracteristicaController {
      * @since 1.0
      */
     //SpringDoc documentação
-    @Operation(summary = "Retorna todas as caracteristicas paginadas")
+    @Operation(summary = "Retorna todas as características paginadas")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Caracteristicas encontradas"),
+            @ApiResponse(responseCode = "200", description = "Características encontradas"),
             @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
                     content = @Content(schema = @Schema(implementation = HandlerError.class))),
             @ApiResponse(responseCode = "403", description = "Você não tem permissão para acessar este recurso",
@@ -86,7 +88,7 @@ public class CaracteristicaController {
             @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção", content = @Content(schema =
             @Schema(implementation = HandlerError.class))),
     })
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<Page<CaracteristicaDTO>> buscarTodos(@ParameterObject Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(caracteristicaService.buscarTodos(pageable));
     }
@@ -99,9 +101,9 @@ public class CaracteristicaController {
      * @since 1.0
      */
     //SpringDoc documentação
-    @Operation(summary = "Atualiza uma caracteristica")
+    @Operation(summary = "Atualiza uma característica")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Caracteristica atualizada", content = @Content),
+            @ApiResponse(responseCode = "200", description = "Característica atualizada", content = @Content),
             @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
                     content = @Content(schema = @Schema(implementation = HandlerError.class))),
             @ApiResponse(responseCode = "403", description = "Você não tem permissão para acessar este recurso",

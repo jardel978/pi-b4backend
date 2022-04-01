@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import java.util.List;
 @RequestMapping("/reservas")
 //SpringDoc documentação
 @Tag(name = "Reservas", description = "API REST Reservas")
+@SecurityRequirement(name = "apidigitalbooking")
 public class ReservaController {
 
     @Autowired
@@ -94,7 +96,7 @@ public class ReservaController {
     /**
      * Metodo que faz a busca de todas as reservas.
      *
-     * @param emailCliente Email do cliente o qual queremos retormar todas as suas reservas.
+     * @param emailCliente Email do cliente o qual queremos retornar todas as suas reservas.
      * @return Response HTTP personalizada contendo HttpStatus 200 e uma lista de reservas em seu corpo.
      * @since 1.0
      */
@@ -111,7 +113,7 @@ public class ReservaController {
     })
     @GetMapping("/cliente/buscar")
     public ResponseEntity<List<ReservaDTO>> buscarTodosDeUmCliente(
-            @Parameter(description = "Email do cliente o qual queremos retormar todas as suas reservas")
+            @Parameter(description = "Email do cliente o qual queremos retornar todas as suas reservas")
             @RequestParam(value = "email-cliente") String emailCliente) {
         return ResponseEntity.status(HttpStatus.OK).body(reservaService.buscarTodosDeUmCliente(emailCliente));
     }

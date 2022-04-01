@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,7 +33,9 @@ import javax.validation.Valid;
 @RequestMapping("/clientes")
 //SpringDoc documentação
 @Tag(name = "Clientes", description = "API REST Clientes")
-public class ClienteController extends UsuarioController {
+@SecurityRequirement(name = "apidigitalbooking")
+//public class ClienteController extends UsuarioController {
+public class ClienteController {
 
     @Autowired
     private ClienteService clienteService;
@@ -113,13 +116,41 @@ public class ClienteController extends UsuarioController {
                     content = @Content(schema = @Schema(implementation = HandlerError.class))),
     })
     @Transactional
-    @PutMapping("/atualizar/cliente")
+    @PutMapping("/atualizar")
     public ResponseEntity<?> atualizar(@Parameter(description = "Cliente a ser atualizado na base de dados") @Valid @RequestBody ClienteDTO clienteDTO,
                                        @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) {
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
 
         clienteService.atualizar(clienteDTO);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /**
+     * Metodo para deletar um usuario.
+     *
+     * @param id Chave identificadora do usuario que deve ser deletado.
+     * @since 1.0
+     */
+    //SpringDoc documentação
+    @Operation(summary = "Deleta um cliente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cliente deletado", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "403", description = "Você não tem permissão para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "404", description = "Cliente não localizado na base de dados",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+    })
+    @Transactional
+    @DeleteMapping("/deletar/{id}")
+    public ResponseEntity<?> deletar(
+            @Parameter(description = "Chave identificadora(id) do cliente a ser deletado")
+            @PathVariable(name = "id") Long id) {
+        clienteService.deletar(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

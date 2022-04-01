@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ import javax.validation.Valid;
 @RequestMapping("/usuarios")
 //SpringDoc documentação
 @Tag(name = "Usuários", description = "API REST Usuários")
+@SecurityRequirement(name = "apidigitalbooking")
 public class UsuarioController {
 
     @Autowired
@@ -154,7 +156,7 @@ public class UsuarioController {
     /**
      * Metodo para alteracao de senha de um usuario
      *
-     * @param novaSenhaDTO Objeto contendo a senha atual que deve ser substituida pela nova senha
+     * @param novaSenhaDTO Objeto contendo a senha atual que deve ser alterada pela nova senha
      * @param bdResult     Interface geral para validação de dados.
      * @return Response HTTP personalizada com HttpStatus 200.
      * @since 1.0

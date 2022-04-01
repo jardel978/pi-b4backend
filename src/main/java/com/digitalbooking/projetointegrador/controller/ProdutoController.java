@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import javax.validation.Valid;
 @RequestMapping("/produtos")
 //SpringDoc documentação
 @Tag(name = "Produtos", description = "API REST Produtos")
+@SecurityRequirement(name = "apidigitalbooking")
 public class ProdutoController {
 
     @Autowired
@@ -114,7 +116,7 @@ public class ProdutoController {
                     content = @Content),
             @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção", content = @Content),
     })
-    @GetMapping("/permitAll/buscar/categorias")//rota: /produtos/buscar/categorias?nome-categoria=nome categoria
+    @GetMapping("/permitAll/buscar/categorias")
     public ResponseEntity<?> buscarPorCategoria(
             @Parameter(description = "Nome da categoria a qual queremos buscar os produtos associados")
             @RequestParam(value = "nome-categoria") String nomeCategoria) {
@@ -140,7 +142,7 @@ public class ProdutoController {
                     content = @Content),
             @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção", content = @Content),
     })
-    @GetMapping("/permitAll/buscar/cidades")//rota: /produtos/buscar/cidades?nome-cidade=nome cidade
+    @GetMapping("/permitAll/buscar/cidades")
     public ResponseEntity<?> buscarPorCidade(
             @Parameter(description = "Nome da cidade a qual queremos buscar os produtos associados")
             @RequestParam(value = "nome-cidade") String nomeCidade) {

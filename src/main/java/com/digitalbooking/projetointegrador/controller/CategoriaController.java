@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import javax.validation.Valid;
 @RequestMapping("/categorias")
 //SpringDoc documentação
 @Tag(name = "Categorias", description = "API REST Categorias")
+@SecurityRequirement(name = "apidigitalbooking")
 public class CategoriaController {
 
     @Autowired
@@ -58,7 +60,8 @@ public class CategoriaController {
     })
     @Transactional
     @PostMapping("/salvar")
-    public ResponseEntity<?> salvar(@Valid @RequestBody CategoriaDTO categoriaDTO, BindingResult bdResult) {
+    public ResponseEntity<?> salvar(@Parameter(description = "Categoria a ser salva na base de dados") @Valid @RequestBody CategoriaDTO categoriaDTO,
+                                    @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) {
         categoriaService.salvar(categoriaDTO);
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
@@ -111,7 +114,8 @@ public class CategoriaController {
     })
     @Transactional
     @PutMapping("/atualizar")
-    public ResponseEntity<?> atualizar(@Valid @RequestBody CategoriaDTO categoriaDTO, BindingResult bdResult) {
+    public ResponseEntity<?> atualizar(@Parameter(description = "Categoria a ser atualizada na base de dados") @Valid @RequestBody CategoriaDTO categoriaDTO,
+                                       @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) {
         categoriaService.atualizar(categoriaDTO);
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());

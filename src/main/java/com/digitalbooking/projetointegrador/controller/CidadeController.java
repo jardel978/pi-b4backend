@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import javax.validation.Valid;
 @RequestMapping("/cidades")
 //SpringDoc documentação
 @Tag(name = "Cidades", description = "API REST Cidades")
+@SecurityRequirement(name = "apidigitalbooking")
 public class CidadeController {
 
     @Autowired
@@ -61,7 +63,8 @@ public class CidadeController {
     })
     @Transactional
     @PostMapping("/salvar")
-    public ResponseEntity<?> salvar(@Valid @RequestBody CidadeDTO cidadeDTO, BindingResult bdResult) {
+    public ResponseEntity<?> salvar(@Parameter(description = "Cidade a ser salva na base de dados")@Valid @RequestBody CidadeDTO cidadeDTO,
+                                    @Parameter(description = "Interface geral para validação de dados recebidos")BindingResult bdResult) {
         cidadeService.salvar((cidadeDTO));
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
@@ -118,7 +121,8 @@ public class CidadeController {
     })
     @Transactional
     @PutMapping("/atualizar")
-    public ResponseEntity<?> atualizar(@Valid @RequestBody CidadeDTO cidadeDTO, BindingResult bdResult) {
+    public ResponseEntity<?> atualizar(@Parameter(description = "Cidade a ser atualizada na base de dados")@Valid @RequestBody CidadeDTO cidadeDTO,
+                                       @Parameter(description = "Interface geral para validação de dados recebidos")BindingResult bdResult) {
         cidadeService.atualizar(cidadeDTO);
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());

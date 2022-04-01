@@ -1,7 +1,6 @@
 package com.digitalbooking.projetointegrador.security;
 
 import com.digitalbooking.projetointegrador.controller.HandlerError;
-import com.digitalbooking.projetointegrador.security.exception.GenericoTokenException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -32,34 +31,35 @@ public class JwtFiltroValidacao extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } else {
             String authorizationHeader = request.getHeader(AUTHORIZATION);//token com o prefixo Bearer
-            if (jwtUtil.validarToken(authorizationHeader)) {
-                if (authorizationHeader != null && authorizationHeader.startsWith(ATRIBUTO_PREFIXO)) {
-                    try {
-                        SecurityContextHolder.getContext().setAuthentication(
-                                jwtUtil.pegarAtenticacao(authorizationHeader));
-                        filterChain.doFilter(request, response);
-                    } catch (Exception e) {
-                        throw new GenericoTokenException("Erro! Token inválido ou não informado.");
-                    }
-                } else {
+//            if (jwtUtil.validarToken(authorizationHeader)) {
+            if (authorizationHeader != null && authorizationHeader.startsWith(ATRIBUTO_PREFIXO)) {
+                try {
+                    SecurityContextHolder.getContext().setAuthentication(
+                            jwtUtil.pegarAtenticacao(authorizationHeader));
                     filterChain.doFilter(request, response);
+                } catch (Exception e) {
+//                    String erroEmToken = jwtUtil.capturarErroEmToken(authorizationHeader);
+                    response.setHeader("error", "erro de validação");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//setando status 401
+                    HandlerError error = HandlerError
+                            .builder()
+                            .status(UNAUTHORIZED.value())
+                            .mensagem(authorizationHeader == null ? e.getMessage() : jwtUtil.capturarErroEmToken(authorizationHeader))
+                            .data(new Date())
+                            .path(request.getRequestURI())
+                            .build();
+
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    ObjectMapper mapper = new ObjectMapper();
+                    response.getWriter().write(mapper.writeValueAsString(error));
+//                    throw new GenericoTokenException("Erro! Token inválido ou não informado.");
                 }
             } else {
-                String erroEmToken = jwtUtil.capturarErroEmToken(authorizationHeader);
-                response.setHeader("error", erroEmToken);
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//setando status 401
-                HandlerError error = HandlerError
-                        .builder()
-                        .status(UNAUTHORIZED.value())
-                        .mensagem(erroEmToken)
-                        .data(new Date())
-                        .path(request.getRequestURI())
-                        .build();
-
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                ObjectMapper mapper = new ObjectMapper();
-                response.getWriter().write(mapper.writeValueAsString(error));
+                filterChain.doFilter(request, response);
             }
+//            } else {
+
+//            }
         }
     }
 }

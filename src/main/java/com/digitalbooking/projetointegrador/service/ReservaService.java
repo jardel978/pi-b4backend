@@ -95,6 +95,7 @@ public class ReservaService {
         Reserva reservaModel = reservaRepository.findById(id)
                 .orElseThrow(() -> new DadoNaoEncontradoException("Reserva não encontrada." +
                         " Tipo: " + Reserva.class.getName()));
+        //implementar regra de negócio
         reservaRepository.deleteById(id);
     }
 
