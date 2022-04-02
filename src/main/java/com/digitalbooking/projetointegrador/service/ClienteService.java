@@ -83,6 +83,8 @@ public class ClienteService {
                         "não encontrado. Tipo: " + Cliente.class.getName()));
         clienteDTO.setSenha(clienteDaBase.getSenha());
         Cliente clienteModel = modelMapper.map(clienteDTO, Cliente.class);
+        clienteModel.setUsuarioEstaValidado(true);
+        clienteModel.setDataValidacaoRegistro(clienteDaBase.getDataValidacaoRegistro());
         if (clienteDaBase.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)//evita que um user possa mudar sua função
                 && !clienteDTO.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)) {
             clienteModel.setFuncao(clienteDaBase.getFuncao());

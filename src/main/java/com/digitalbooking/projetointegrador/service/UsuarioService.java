@@ -119,6 +119,8 @@ public class UsuarioService implements UserDetailsService {
                         "não encontrado. Tipo: " + Usuario.class.getName()));
         usuarioDTO.setSenha(usuarioDaBase.getSenha());
         Usuario usuarioModel = modelMapper.map(usuarioDTO, Usuario.class);
+        usuarioModel.setUsuarioEstaValidado(true);
+        usuarioModel.setDataValidacaoRegistro(usuarioDaBase.getDataValidacaoRegistro());
         if (usuarioDaBase.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)//evita que um user possa mudar sua função
                 && !usuarioDTO.getFuncao().getNomeFuncaoEnum().equals(NomeFuncao.USER)) {
             usuarioModel.setFuncao(usuarioDaBase.getFuncao());
@@ -136,7 +138,7 @@ public class UsuarioService implements UserDetailsService {
                 usuarioRepository.findByEmail(novaSenhaDTO.getEmail()).orElseThrow(() -> new DadoNaoEncontradoException("Falha" +
                         " ao tentar validar registro do usuário com email: " +
                         novaSenhaDTO.getEmail() + ". Usuário não encontrado. Tipo: " + Usuario.class.getName()));
-        boolean senhaAtualEstaCorreta = passwordEncoder.matches(usuario.getSenha(), novaSenhaDTO.getSenhaAtual());
+        boolean senhaAtualEstaCorreta = passwordEncoder.matches(novaSenhaDTO.getSenhaAtual(), usuario.getSenha());
         if (senhaAtualEstaCorreta) {
             usuario.setSenha(passwordEncoder.encode(novaSenhaDTO.getSenhaNova()));
             usuarioRepository.save(usuario);
@@ -154,22 +156,21 @@ public class UsuarioService implements UserDetailsService {
      *              cadastrado
      * @since 1.0
      */
-    public void validarRegistro(Long id, String token) throws MessagingException {
+    public String validarRegistro(Long id, String token) throws MessagingException {
         String erroEmToken = jwtUtil.capturarErroEmToken(token);
         Usuario usuario =
                 usuarioRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException(
                         "Falha ao tentar validar registro do usuário. Usuário não encontrado. Tipo: " + Usuario.class.getName()));
 
         if (usuario.isEnabled()) {//usuário já validado
-            throw new GenericoTokenException("Esse token de validação já foi utilizado!");
+            return "Esse link já foi utilizado anteriormente. Usuário já validado!";
         }
 
         if (erroEmToken.contains("expirado") && !usuario.isEnabled()) {//token expirado e usuário ainda não validado
             String tokenValidacao = jwtUtil.gerarTokenDeValidacaoDeRegistro(usuario);//gerando token
             System.out.println("Token gerado: " + tokenValidacao);
             emailService.enviarEmail(emailService.gerarEmailDeValidacao(tokenValidacao, usuario.getEmail()));
-            throw new TokenExpiradoException("Falha ao tentar validar registro: link de validação expirado." +
-                    " Verifique novamente o seu email! Em instantes você receberá um novo link.");
+            return "Link de validação expirado! Confira seu email, em instantes enviaremos um novo link.";
         }
         if (jwtUtil.validarToken(token) && !usuario.isEnabled()) {//token válido e usuário ainda não validado
             String emailDoUsuario = jwtUtil.pegarEmailUsuarioViaToken(token);
@@ -179,11 +180,12 @@ public class UsuarioService implements UserDetailsService {
                 usuario.setUsuarioEstaValidado(true);
                 usuario.setDataValidacaoRegistro(new Date());
                 usuarioRepository.save(usuario);//validando usuário
+                return "Novo usuário validado com sucesso!";
             } else {
-                throw new GenericoTokenException("Token inválido! O token informado viola regras de segurança!");
+                return "Link de validação inválido! O link informado viola regras de segurança.";
             }
         } else {//para outros tipos de possíveis erros
-            throw new GenericoTokenException(erroEmToken);
+            return erroEmToken;
         }
     }
 
@@ -229,6 +231,28 @@ public class UsuarioService implements UserDetailsService {
     }
 
     /**
+     * Metodo para buscar usuario via token JWT
+     *
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito
+     * @since 1.0
+     */
+    public UsuarioDTO buscarUsuarioViaJWT(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader(AUTHORIZATION);//token com o prefixo Bearer
+        if (authorizationHeader != null && authorizationHeader.startsWith(ATRIBUTO_PREFIXO)) {
+            if (jwtUtil.validarToken(authorizationHeader)) {
+                String emailDoUsuario = jwtUtil.pegarEmailUsuarioViaToken(authorizationHeader);
+                Usuario usuario =
+                        usuarioRepository.findByEmail(emailDoUsuario).orElseThrow(() -> new DadoNaoEncontradoException("Falha ao tentar atualizar token JWT do usuário com email: " +
+                                emailDoUsuario + ". Usuário não encontrado. Tipo: " + Usuario.class.getName()));
+                return modelMapper.map(usuario, UsuarioDTO.class);
+            } else {
+                throw new GenericoTokenException("Erro ao tentar bucar usuário via token JWT");
+            }
+        }
+        return null;
+    }
+
+    /**
      * Metodo para deletar um usuario.
      *
      * @param id Chave identificadora do usuario que deve ser deletado.
@@ -239,4 +263,5 @@ public class UsuarioService implements UserDetailsService {
                 "encontrado. Tipo: " + Usuario.class.getName()));
         usuarioRepository.deleteById(id);
     }
+
 }

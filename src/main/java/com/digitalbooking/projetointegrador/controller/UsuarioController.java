@@ -212,33 +212,63 @@ public class UsuarioController {
     public ResponseEntity<?> validarRegistro(
             @Parameter(description = "Chave identificadora(id) do usuário o qual a senha deve ser atualizada") @PathVariable(name = "id") Long id,
             @Parameter(description = "Token de verificacao de registro do novo usuário gerado pela API e enviado no endereco eletronico cadastrado") @PathVariable(name = "token") String token) throws MessagingException {
-        usuarioService.validarRegistro(id, token);
-        return ResponseEntity.status(HttpStatus.OK).body(
-                "<style>\n" +
-                        "  .principal {\n" +
-                        "    display: flex;\n" +
-                        "    justify-content: center;\n" +
-                        "    align-items: center;\n" +
-                        "    width: 100vw;\n" +
-                        "    height: 100vh;\n" +
-                        "    background: #FFFFFF;\n" +
-                        "    color: #f0572d;\n" +
-                        "    font-family: 'Roboto';\n" +
-                        "    font-style: normal;\n" +
-                        "    font-weight: 500;\n" +
-                        "    font-size: 16px;\n" +
-                        "  }\n" +
-                        "\n" +
-                        "  a:hover {\n" +
-                        "    cursor: pointer;\n" +
-                        "  }\n" +
-                        "</style>\n" +
-                        "\n" +
-                        "\n" +
-                        "<main class=\"principal\">\n" +
-                        "  <p>Novo usuário validado com sucesso!</p><br>\n" +
-                        "  <a href=\"http://localhost:3000/login\">Clique aqui e faça login!</a>\n" +
-                        "</main>");
+        String resultadoValidacao = usuarioService.validarRegistro(id, token);
+        String linkMensagem = "http://localhost:3000/";
+        String textoLink = "Clique aqui para voltar ao site!";
+
+        if (resultadoValidacao.contains("sucesso")) {
+            linkMensagem = "http://localhost:3000/login";
+            textoLink = "Clique aqui e faça login!";
+        }
+
+        String mensagemCorpo = "<style>\n" +
+                "  .principal {\n" +
+                "    display: flex;\n" +
+                "    justify-content: center;\n" +
+                "    align-items: center;\n" +
+                "    width: 100vw;\n" +
+                "    height: 100vh;\n" +
+                "    background: #FFFFFF;\n" +
+                "    color: #f0572d;\n" +
+                "    font-family: 'Roboto';\n" +
+                "    font-style: normal;\n" +
+                "    font-weight: 500;\n" +
+                "    font-size: 16px;\n" +
+                "  }\n" +
+                "\n" +
+                "  a:hover {\n" +
+                "    cursor: pointer;\n" +
+                "  }\n" +
+                "</style>\n" +
+                "\n" +
+                "\n" +
+                "<main class=\"principal\">\n" +
+                "  <p>" + resultadoValidacao + "</p><br>\n" +
+                "  <div><a href=\"" + linkMensagem + "\">" + textoLink + "</a></div>\n" +
+                "</main>";
+        return ResponseEntity.status(HttpStatus.OK).body(mensagemCorpo);
+    }
+
+    /**
+     * Metodo para buscar usuario via JWT
+     *
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito
+     * @since 1.0
+     */
+    //SpringDoc documentação
+    @Operation(summary = "Busca um usuário via token JWT")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado", content = @Content),
+            @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "404", description = "Usuário não localizado na base de dados",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+    })
+    @GetMapping("/permitAll/me")
+    public ResponseEntity<?> buscarUsuarioViaJWT(HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarUsuarioViaJWT(request));
     }
 
     /**
