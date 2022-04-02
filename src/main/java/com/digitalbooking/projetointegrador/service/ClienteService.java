@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
+
 /**
  * Classe de service para <strong>Cliente</strong>.
  *
@@ -44,7 +46,7 @@ public class ClienteService {
      * @param clienteDTO Cliente que deve ser persistido no banco de dados.
      * @since 1.0
      */
-    public void salvar(ClienteDTO clienteDTO) {
+    public void salvar(ClienteDTO clienteDTO) throws MessagingException {
         Cliente clienteModel = modelMapper.map(clienteDTO, Cliente.class);
         clienteModel.setSenha(passwordEncoder.encode(clienteModel.getSenha()));
         clienteModel.setUsuarioEstaValidado(false);

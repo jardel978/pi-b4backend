@@ -35,9 +35,9 @@ public class ReservaDTO implements Serializable {
     private LocalDate dataFinal;
 
     @NotNull(message = "O produto da reserva deve ser informado")
-    private ProdutoDTO produto;
+    private ProdutoMixReserva produto;
 
     @NotNull(message = "O usuario da reserva deve ser informado")
-    private UsuarioDTO usuario;
+    private UsuarioMixReservaDTO usuario;
 
 }

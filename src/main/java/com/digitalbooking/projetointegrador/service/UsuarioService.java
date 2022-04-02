@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
@@ -66,7 +67,7 @@ public class UsuarioService implements UserDetailsService {
      * @param usuarioDTO Usuario que deve ser persistido no banco de dados.
      * @since 1.0
      */
-    public void salvar(UsuarioDTO usuarioDTO) {
+    public void salvar(UsuarioDTO usuarioDTO) throws MessagingException {
         Usuario usuarioModel = modelMapper.map(usuarioDTO, Usuario.class);
         usuarioModel.setSenha(passwordEncoder.encode(usuarioModel.getSenha()));
         usuarioModel.setUsuarioEstaValidado(false);
@@ -153,7 +154,7 @@ public class UsuarioService implements UserDetailsService {
      *              cadastrado
      * @since 1.0
      */
-    public void validarRegistro(Long id, String token) {
+    public void validarRegistro(Long id, String token) throws MessagingException {
         String erroEmToken = jwtUtil.capturarErroEmToken(token);
         Usuario usuario =
                 usuarioRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException(

@@ -35,6 +35,6 @@ public class ProdutoDTO implements Serializable {
 
     private Set<CaracteristicaDTO> caracteristicas;
 
-    private Set<ReservaDTO> reservas;
+    private Set<ReservaMixProdutoDTO> reservas;
 
 }

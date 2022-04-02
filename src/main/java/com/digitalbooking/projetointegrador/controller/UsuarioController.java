@@ -17,11 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -65,7 +67,7 @@ public class UsuarioController {
     @Transactional
     @PostMapping("/salvar")
     public ResponseEntity<?> salvar(@Parameter(description = "Usuário a ser salvo na base de dados") @Valid @RequestBody UsuarioDTO usuarioDTO,
-                                    @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) {
+                                    @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) throws MessagingException {
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
 
@@ -183,8 +185,7 @@ public class UsuarioController {
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
 
         usuarioService.atualizarSenha(novaSenhaDTO);
-        return ResponseEntity.status(HttpStatus.OK).body("Usuário validado com sucesso! Volte ao site: " +
-                "http://localhost:3000");
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -207,12 +208,37 @@ public class UsuarioController {
                     content = @Content(schema = @Schema(implementation = HandlerError.class))),
     })
     @Transactional
-    @GetMapping("/permitAll/validar-registro/{id}/{token}")
+    @GetMapping(value = "/permitAll/validar-registro/{id}/{token}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<?> validarRegistro(
             @Parameter(description = "Chave identificadora(id) do usuário o qual a senha deve ser atualizada") @PathVariable(name = "id") Long id,
-            @Parameter(description = "Token de verificacao de registro do novo usuário gerado pela API e enviado no endereco eletronico cadastrado") @PathVariable(name = "token") String token) {
+            @Parameter(description = "Token de verificacao de registro do novo usuário gerado pela API e enviado no endereco eletronico cadastrado") @PathVariable(name = "token") String token) throws MessagingException {
         usuarioService.validarRegistro(id, token);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                "<style>\n" +
+                        "  .principal {\n" +
+                        "    display: flex;\n" +
+                        "    justify-content: center;\n" +
+                        "    align-items: center;\n" +
+                        "    width: 100vw;\n" +
+                        "    height: 100vh;\n" +
+                        "    background: #FFFFFF;\n" +
+                        "    color: #f0572d;\n" +
+                        "    font-family: 'Roboto';\n" +
+                        "    font-style: normal;\n" +
+                        "    font-weight: 500;\n" +
+                        "    font-size: 16px;\n" +
+                        "  }\n" +
+                        "\n" +
+                        "  a:hover {\n" +
+                        "    cursor: pointer;\n" +
+                        "  }\n" +
+                        "</style>\n" +
+                        "\n" +
+                        "\n" +
+                        "<main class=\"principal\">\n" +
+                        "  <p>Novo usuário validado com sucesso!</p><br>\n" +
+                        "  <a href=\"http://localhost:3000/login\">Clique aqui e faça login!</a>\n" +
+                        "</main>");
     }
 
     /**

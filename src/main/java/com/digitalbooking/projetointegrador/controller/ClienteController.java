@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.validation.Valid;
 
 /**
@@ -62,7 +63,7 @@ public class ClienteController {
     @Transactional
     @PostMapping("/permitAll/salvar")
     public ResponseEntity<?> salvar(@Parameter(description = "Cliente a ser salvo na base de dados") @Valid @RequestBody ClienteDTO clienteDTO,
-                                    @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) {
+                                    @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) throws MessagingException {
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
 
