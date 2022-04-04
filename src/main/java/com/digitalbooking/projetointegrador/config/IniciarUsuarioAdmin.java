@@ -55,7 +55,7 @@ public class IniciarUsuarioAdmin implements CommandLineRunner {
            usuarioAdmin.setSobrenome("Admin");
            usuarioAdmin.setEmail("jardeloliveiracontact@gmail.com");
            usuarioAdmin.setSenha("admin123");
-           usuarioAdmin.setFuncao(funcaoUser);
+           usuarioAdmin.setFuncao(funcaoAdmin);
 
 //            Cliente usuarioComum = new Cliente();
 //            usuarioComum.setNome("Cliente");
