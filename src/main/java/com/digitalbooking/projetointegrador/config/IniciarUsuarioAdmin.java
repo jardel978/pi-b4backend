@@ -41,9 +41,9 @@ public class IniciarUsuarioAdmin implements CommandLineRunner {
    public void run(String... args) throws Exception {
        try {
 
-//            Funcao funcaoAdmin = new Funcao();
-//            funcaoAdmin.setNomeFuncaoEnum(NomeFuncao.ADMIN);
-//            Funcao funcaoAdminSalva = funcaoRepository.saveAndFlush(funcaoAdmin);
+           Funcao funcaoAdmin = new Funcao();
+           funcaoAdmin.setNomeFuncaoEnum(NomeFuncao.ADMIN);
+           Funcao funcaoAdminSalva = funcaoRepository.saveAndFlush(funcaoAdmin);
 
 //            Funcao funcaoUser = new Funcao();
 //          funcaoUser.setId(1);
@@ -53,9 +53,9 @@ public class IniciarUsuarioAdmin implements CommandLineRunner {
            Usuario usuarioAdmin = new Usuario();
            usuarioAdmin.setNome("Admin");
            usuarioAdmin.setSobrenome("Admin");
-           usuarioAdmin.setEmail("admindb@gmail.com");
+           usuarioAdmin.setEmail("jardeloliveiracontact@gmail.com");
            usuarioAdmin.setSenha("admin123");
-//            usuarioAdmin.setFuncao(funcaoUser);
+           usuarioAdmin.setFuncao(funcaoUser);
 
 //            Cliente usuarioComum = new Cliente();
 //            usuarioComum.setNome("Cliente");
