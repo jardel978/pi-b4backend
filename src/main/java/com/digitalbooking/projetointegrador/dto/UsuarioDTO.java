@@ -38,9 +38,12 @@ public class UsuarioDTO implements Serializable {
     @NotNull(message = "Função é um campo obrigatório")
     private FuncaoDTO funcao;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Boolean usuarioEstaValidado;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)//permite apenas retornar esse atributo
     private Date dataValidacaoRegistro;
+
+    private Integer limitePessoasPorDia;
 
 }

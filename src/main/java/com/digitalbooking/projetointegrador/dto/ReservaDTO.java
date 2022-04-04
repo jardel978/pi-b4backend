@@ -40,4 +40,7 @@ public class ReservaDTO implements Serializable {
     @NotNull(message = "O usuario da reserva deve ser informado")
     private UsuarioMixReservaDTO usuario;
 
+    @NotNull(message = "A quantidade de pessoas deve ser informada")
+    private Integer qtdPessoas;
+
 }

@@ -3,9 +3,7 @@ package com.digitalbooking.projetointegrador.controller.exception;
 import com.digitalbooking.projetointegrador.controller.HandlerError;
 import com.digitalbooking.projetointegrador.security.exception.GenericoTokenException;
 import com.digitalbooking.projetointegrador.security.exception.TokenExpiradoException;
-import com.digitalbooking.projetointegrador.service.exception.DadoNaoEncontradoException;
-import com.digitalbooking.projetointegrador.service.exception.DadoRelacionadoException;
-import com.digitalbooking.projetointegrador.service.exception.SenhaIncoretaException;
+import com.digitalbooking.projetointegrador.service.exception.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -208,6 +206,50 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    /**
+     * Metodo que para tratar excecoes do tipo: DataIndisponivelReservaException.
+     *
+     * @param e       Excecao que foi interceptada.
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito.
+     * @return Response HTTP personalizada com HttpStatus 400 e um objeto HandlerError contendo informacoes do erro
+     * ocorrido.
+     * @since 1.0
+     */
+    @ExceptionHandler(DataIndisponivelReservaException.class)
+    public ResponseEntity<HandlerError> dataIndisponivelReservaException(DataIndisponivelReservaException e,
+                                                                         HttpServletRequest request) {
+        HandlerError error = HandlerError.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .mensagem(e.getMessage())
+                .data(new Date())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    /**
+     * Metodo que para tratar excecoes do tipo: ReservaNaoFinalizadaException.
+     *
+     * @param e       Excecao que foi interceptada.
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito.
+     * @return Response HTTP personalizada com HttpStatus 400 e um objeto HandlerError contendo informacoes do erro
+     * ocorrido.
+     * @since 1.0
+     */
+    @ExceptionHandler(ReservaNaoFinalizadaException.class)
+    public ResponseEntity<HandlerError> reservaNaoFinalizadaException(ReservaNaoFinalizadaException e,
+                                                                      HttpServletRequest request) {
+        HandlerError error = HandlerError.builder()
+                .status(HttpStatus.CONFLICT.value())
+                .mensagem(e.getMessage())
+                .data(new Date())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
 }

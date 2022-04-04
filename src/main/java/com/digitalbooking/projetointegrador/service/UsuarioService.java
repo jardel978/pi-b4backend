@@ -242,8 +242,8 @@ public class UsuarioService implements UserDetailsService {
             if (jwtUtil.validarToken(authorizationHeader)) {
                 String emailDoUsuario = jwtUtil.pegarEmailUsuarioViaToken(authorizationHeader);
                 Usuario usuario =
-                        usuarioRepository.findByEmail(emailDoUsuario).orElseThrow(() -> new DadoNaoEncontradoException("Falha ao tentar atualizar token JWT do usuário com email: " +
-                                emailDoUsuario + ". Usuário não encontrado. Tipo: " + Usuario.class.getName()));
+                        usuarioRepository.findByEmail(emailDoUsuario).orElseThrow(() -> new DadoNaoEncontradoException("Falha ao buscar usuário via token JWT." +
+                                " Usuário não encontrado. Tipo: " + Usuario.class.getName()));
                 return modelMapper.map(usuario, UsuarioDTO.class);
             } else {
                 throw new GenericoTokenException("Erro ao tentar bucar usuário via token JWT");

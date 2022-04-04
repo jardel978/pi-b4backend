@@ -1,16 +1,25 @@
 package com.digitalbooking.projetointegrador.service;
 
 import com.digitalbooking.projetointegrador.dto.ReservaDTO;
-import com.digitalbooking.projetointegrador.model.Reserva;
+import com.digitalbooking.projetointegrador.model.*;
+import com.digitalbooking.projetointegrador.repository.IDataReservadaRepository;
+import com.digitalbooking.projetointegrador.repository.IProdutoRepository;
 import com.digitalbooking.projetointegrador.repository.IReservaRepository;
+import com.digitalbooking.projetointegrador.repository.IUsuarioRepository;
 import com.digitalbooking.projetointegrador.service.exception.DadoNaoEncontradoException;
+import com.digitalbooking.projetointegrador.service.exception.DataIndisponivelReservaException;
+import com.digitalbooking.projetointegrador.service.exception.ReservaNaoFinalizadaException;
+import com.digitalbooking.projetointegrador.utils.DatasUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -26,7 +35,19 @@ public class ReservaService {
     private IReservaRepository reservaRepository;
 
     @Autowired
+    private IDataReservadaRepository dataReservadaRepository;
+
+    @Autowired
+    private IProdutoRepository produtoRepository;
+
+    @Autowired
+    private IUsuarioRepository usuarioRepository;
+
+    @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private DatasUtil datasUtil;
 
     //CREATE
 
@@ -39,7 +60,41 @@ public class ReservaService {
     public void salvar(ReservaDTO reservaDTO) {
         Reserva reservaModel = modelMapper.map(reservaDTO, Reserva.class);
         //mapeando/convertendo um objeto do tipo ReservaDTO para Reserva
-        reservaRepository.save(reservaModel);
+        Usuario usuario = usuarioRepository.findById(reservaDTO.getUsuario().getId()).orElseThrow(() ->
+                new DadoNaoEncontradoException("O usuário informado para a reserva não foi encontrado. Tipo: " + Usuario.class.getName()));
+        Produto produto = produtoRepository.findById(reservaDTO.getProduto().getId()).orElseThrow(() ->
+                new DadoNaoEncontradoException("O produto informado para a reserva não foi encontrado. Tipo: " + Produto.class.getName()));
+        List<LocalDate> peridoDeDatas = datasUtil.gerarPeriodoDeDatas(reservaDTO.getDataInicio(), reservaDTO.getDataFinal());
+        List<LocalDate> possiveisDatasIndisponiveis = new ArrayList<>();
+        List<DataReservada> listaDatasReservadasLivres = new ArrayList<>();
+
+        if (reservaDTO.getQtdPessoas() <= produto.getLimitePessoasPorDia()) {//se número de vagas que a reserva pede for no máximo o limite de vagas do camping
+            peridoDeDatas.forEach(data -> {
+                Optional<DataReservada> dataReservada = dataReservadaRepository.findById(new DataReservadaPK(data, produto));
+                if (dataReservada.isPresent()) {
+                    boolean vagasDisponiveisComportamTodos =//quantidade de vagas disponíveis for maior ou igual a quantidade de vagas que a reserva pede
+                            (produto.getLimitePessoasPorDia() - dataReservada.get().getQdtPessoasReservadas()) >= reservaDTO.getQtdPessoas();
+
+                    if (vagasDisponiveisComportamTodos) {//se data disponível
+                        dataReservada.get().setQdtPessoasReservadas(//somando a quantidade de pessoas existentes mais as novas para a nova reserva
+                                dataReservada.get().getQdtPessoasReservadas() + reservaDTO.getQtdPessoas());
+                        listaDatasReservadasLivres.add(dataReservada.get());
+                    } else {
+                        possiveisDatasIndisponiveis.add(data);
+                    }
+                } else {
+                    DataReservadaPK id = new DataReservadaPK(data, produto);
+                    listaDatasReservadasLivres.add(new DataReservada(id, reservaDTO.getQtdPessoas()));
+                }
+            });
+        }
+        if (possiveisDatasIndisponiveis.isEmpty()) {
+            listaDatasReservadasLivres.forEach(data -> dataReservadaRepository.save(data));
+            reservaModel.setCliente((Cliente) usuario);
+            reservaRepository.save(reservaModel);
+        } else
+            throw new DataIndisponivelReservaException("O intervalo de datas escolhido possui dias indisponíveis. " +
+                    "Datas indisponíveis: " + possiveisDatasIndisponiveis);
     }
 
     //READ
@@ -95,8 +150,13 @@ public class ReservaService {
         Reserva reservaModel = reservaRepository.findById(id)
                 .orElseThrow(() -> new DadoNaoEncontradoException("Reserva não encontrada." +
                         " Tipo: " + Reserva.class.getName()));
-        //implementar regra de negócio
+
+        if (reservaModel.getDataFinal().isAfter(LocalDate.now())) {//se a data final da reserva ainda não passou
+            throw new ReservaNaoFinalizadaException("Falha ao excluir reserva! A data de fechamento dessa reserva é " +
+                    "posterior ao dia de hoje. Não é possível excluir uma reserva que ainda não foi finalizada.");
+        }
         reservaRepository.deleteById(id);
     }
+
 
 }

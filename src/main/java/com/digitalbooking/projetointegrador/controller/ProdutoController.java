@@ -16,6 +16,7 @@ import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 
 /**
  * Classe de controller para <strong>Produto</strong>.
@@ -95,6 +97,37 @@ public class ProdutoController {
     public ResponseEntity<?> buscarPorId(
             @Parameter(description = "Id do produto a ser buscado") @PathVariable(name = "id") Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(produtoService.buscarPorId(id));
+    }
+
+    /**
+     * Metodo que permite filtrar produtos por cidade e duas datas.
+     *
+     * @param nomeCidade  Nome da cidade a ser buscada.
+     * @param dataInicial Data inicial a ser buscada.
+     * @param dataFinal   Data final a ser buscada.
+     * @return Produtos disponíveis encontrados.
+     */
+    //SpringDoc documentação
+    @Operation(summary = "Busca todos os produto que estão disponíveis para uma cidade e em um determinado intervalo " +
+            "de datas")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Produtos encontrados", content = @Content(schema =
+            @Schema(implementation = ProdutoDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "404", description = "Produto não localizado na base de dados",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+    })
+    @GetMapping("/permitAll/buscar")
+    public ResponseEntity<?> buscarPorCidadeDatas(@Parameter(description = "Nome da cidade em que o produto se localiza") @RequestParam(name = "cidade") String nomeCidade,
+                                                  @Parameter(description = "Data inicial do período") @RequestParam(name = "data-inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicial,
+                                                  @Parameter(description = "Data final do período") @RequestParam(name = "data-fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal,
+                                                  @Parameter(description = "Quantidade de pessoas almejada para a " +
+                                                          "busca") @RequestParam(name = "num-pessoas") Integer qtdPessoasPretendidas) {
+        return ResponseEntity.status(HttpStatus.OK).body(produtoService.buscarPorCidadeDatas(nomeCidade, dataInicial,
+                dataFinal, qtdPessoasPretendidas));
     }
 
     /**

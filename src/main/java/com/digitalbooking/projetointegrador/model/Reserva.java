@@ -56,4 +56,7 @@ public class Reserva implements Serializable {
     @JoinColumn(name = "usuario_id", foreignKey = @ForeignKey(name = "fk_usuario_reserva"))
     private Cliente cliente;
 
+    @Column(name = "qtd_pessoas")
+    private Integer qtdPessoas;
+
 }

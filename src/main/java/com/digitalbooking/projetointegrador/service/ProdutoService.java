@@ -1,23 +1,22 @@
 package com.digitalbooking.projetointegrador.service;
 
 import com.digitalbooking.projetointegrador.dto.ProdutoDTO;
-import com.digitalbooking.projetointegrador.model.Categoria;
-import com.digitalbooking.projetointegrador.model.Cidade;
-import com.digitalbooking.projetointegrador.model.Produto;
-import com.digitalbooking.projetointegrador.repository.ICategoriaRepository;
-import com.digitalbooking.projetointegrador.repository.ICidadeRepository;
-import com.digitalbooking.projetointegrador.repository.IImagemRepository;
-import com.digitalbooking.projetointegrador.repository.IProdutoRepository;
+import com.digitalbooking.projetointegrador.model.*;
+import com.digitalbooking.projetointegrador.repository.*;
 import com.digitalbooking.projetointegrador.service.exception.DadoNaoEncontradoException;
+import com.digitalbooking.projetointegrador.service.exception.DataIndisponivelReservaException;
+import com.digitalbooking.projetointegrador.utils.DatasUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Classe de service para <strong>Produto</strong>.
@@ -39,10 +38,19 @@ public class ProdutoService {
     private ICategoriaRepository categoriaRepository;
 
     @Autowired
+    private IReservaRepository reservaRepository;
+
+    @Autowired
     private IImagemRepository imagemRepository;
 
     @Autowired
+    private IDataReservadaRepository dataReservadaRepository;
+
+    @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private DatasUtil datasUtil;
 
     /**
      * Metodo para salvar um produto.
@@ -78,12 +86,72 @@ public class ProdutoService {
      * @param id Chave identificadora do produto que deve ser buscado.
      * @return Produto buscado.
      */
-    @GetMapping("/buscar/{id}")
     public ProdutoDTO buscarPorId(Long id) {
         Produto produtoModel = produtoRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException(
                 "Produto não encontrado. Tipo: " + Produto.class.getName()));
 
-        return modelMapper.map(produtoModel, ProdutoDTO.class);
+        ProdutoDTO produtoDTO = modelMapper.map(produtoModel, ProdutoDTO.class);
+        return produtoDTO;
+    }
+
+    /**
+     * Metodo que permite filtrar produtos por cidade e duas datas.
+     *
+     * @param nomeCidade  Nome da cidade a ser buscada.
+     * @param dataInicial Data inicial a ser buscada.
+     * @param dataFinal   Data final a ser buscada.
+     * @return Produtos disponíveis encontrados.
+     */
+    public List<ProdutoDTO> buscarPorCidadeDatas(String nomeCidade, LocalDate dataInicial, LocalDate dataFinal,
+                                                 Integer qtdPessoasPretendidas) {
+        List<Produto> listaTotalDeProdutos = produtoRepository.findAllByCidadeNomeContainsIgnoreCase(nomeCidade);
+        List<LocalDate> peridoDeDatas = datasUtil.gerarPeriodoDeDatas(dataInicial, dataFinal);
+        List<Produto> produtosComDatasDisponiveis = new ArrayList<>();
+
+        listaTotalDeProdutos.forEach(produto -> {//para cada produto
+            List<LocalDate> listaDatasLivres = new ArrayList<>();
+
+            if (qtdPessoasPretendidas <= produto.getLimitePessoasPorDia()) {
+                peridoDeDatas.forEach(data -> {//verifique todas as datas
+                    Optional<DataReservada> dataReservada = dataReservadaRepository.findById(new DataReservadaPK(data,
+                            produto));
+                    if (dataReservada.isPresent()) {//se data já possui reservas mas tem vagas suficientes
+                        if (dataReservada.get().getQdtPessoasReservadas() + qtdPessoasPretendidas <= produto.getLimitePessoasPorDia()) {
+                            listaDatasLivres.add(data);
+                        }
+                    } else {//se data não possui reservas ainda ela também está disponível
+                        listaDatasLivres.add(data);
+                    }
+                });
+
+                if (peridoDeDatas.size() == listaDatasLivres.size())//se todos as datas estão disponíveis
+                    produtosComDatasDisponiveis.add(produto);//adicione o produto ao array
+            } else {
+                throw new DataIndisponivelReservaException("A quantidade de vagas solicitadas ultrapassa o limite de " +
+                        "pessoas que esse camping suporta");
+            }
+        });
+
+        produtosComDatasDisponiveis.stream().map(produto -> {
+            List<LocalDate> datasAnteriosresEPosterioresAoPeriodo = datasUtil.gerarDatasAnterioresEPosterioresAoPeriodo(
+                    dataInicial, dataFinal);
+            List<LocalDate> datasIndisponiveis = new ArrayList<>();
+            datasAnteriosresEPosterioresAoPeriodo.forEach(data -> {
+                Optional<DataReservada> dataReservada = dataReservadaRepository.findById(new DataReservadaPK(data,
+                        produto));
+                if (dataReservada.isPresent()) {
+                    if (dataReservada.get().getQdtPessoasReservadas() + qtdPessoasPretendidas > produto.getLimitePessoasPorDia()) {
+                        datasIndisponiveis.add(data);
+                    }
+                }
+            });
+            produto.setDatasIndisponiveis(datasIndisponiveis);
+            return produto;
+        }).collect(Collectors.toList());
+
+        //criar uma lógica para se caso produtosComDatasDisponiveis for vazia retornar uma sugestão de datas diferentes
+        return produtosComDatasDisponiveis.stream().map(produto ->
+                modelMapper.map(produto, ProdutoDTO.class)).collect(Collectors.toList());
     }
 
     /**
@@ -163,13 +231,20 @@ public class ProdutoService {
      * @since 1.0
      */
     public void deletar(Long id) {
-        Produto produtoModel =produtoRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException("Produto não " +
-                "encontrado." +
-                " Tipo: " + Produto.class.getName()));
+        Produto produtoModel = produtoRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException("Produto não " +
+                "encontrado. Tipo: " + Produto.class.getName()));
 
-        if(produtoModel.getReservas() != null)
-            throw new DadoNaoEncontradoException("Esse Produto não pode ser excluído pois está relacionado a uma reserva");
-
+        if (!produtoModel.getReservas().isEmpty()) {
+            produtoModel.getReservas().forEach(reserva -> {
+                if (reserva.getDataFinal().isBefore(LocalDate.now())) {//se data final da reserva já passou
+                    reservaRepository.deleteById(reserva.getId());
+                } else {
+                    throw new DadoNaoEncontradoException("Esse produto não pode ser excluído pois está relacionado a " +
+                            "uma ou mais reservas");
+                }
+            });
+        }
+        //implementar relatório antes de deletar??
         produtoRepository.deleteById(id);
     }
 }

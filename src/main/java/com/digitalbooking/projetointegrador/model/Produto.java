@@ -9,7 +9,10 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -62,4 +65,11 @@ public class Produto implements Serializable {
     @JsonIgnore
     @OneToMany(mappedBy = "produto", orphanRemoval = true)
     private Set<Reserva> reservas;
+
+    @Column(name = "limite_pessoas_por_dia")
+    private Integer limitePessoasPorDia;
+
+    @Transient//indica que esse campo não será persistido
+    private List<LocalDate> datasIndisponiveis = new ArrayList<>();
+
 }

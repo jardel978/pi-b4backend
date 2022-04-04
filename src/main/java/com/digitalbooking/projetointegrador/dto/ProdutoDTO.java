@@ -5,6 +5,9 @@ import lombok.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -36,5 +39,10 @@ public class ProdutoDTO implements Serializable {
     private Set<CaracteristicaDTO> caracteristicas;
 
     private Set<ReservaMixProdutoDTO> reservas;
+
+    @NotNull(message = "A quantidade limite diária de pessoas que o camping comporta deve ser informada")
+    private Integer limitePessoasPorDia;
+
+    private List<LocalDate> datasIndisponiveis;
 
 }
