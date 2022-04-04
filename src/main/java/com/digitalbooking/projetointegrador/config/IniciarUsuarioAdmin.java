@@ -39,12 +39,12 @@ public class IniciarUsuarioAdmin implements CommandLineRunner {
 
            Funcao funcaoAdmin = new Funcao();
            funcaoAdmin.setNomeFuncaoEnum(NomeFuncao.ADMIN);
-//            Funcao funcaoAdminSalva = funcaoRepository.saveAndFlush(funcaoAdmin);
+           Funcao funcaoAdminSalva = funcaoRepository.saveAndFlush(funcaoAdmin);
 
-//            Funcao funcaoUser = new Funcao();
-//          funcaoUser.setId(1);
-//            funcaoUser.setNomeFuncaoEnum(NomeFuncao.USER);
-//            Funcao funcaoUserSalva = funcaoRepository.saveAndFlush(funcaoUser);
+           Funcao funcaoUser = new Funcao();
+         funcaoUser.setId(1);
+           funcaoUser.setNomeFuncaoEnum(NomeFuncao.USER);
+           Funcao funcaoUserSalva = funcaoRepository.saveAndFlush(funcaoUser);
 
            Usuario usuarioAdmin = new Usuario();
            usuarioAdmin.setNome("Admin");
