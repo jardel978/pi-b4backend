@@ -65,8 +65,8 @@ public class IniciarUsuarioAdmin implements CommandLineRunner {
 //            usuarioComum.setSenha("cliente123");
 //            usuarioComum.setEndereco("Rua Luiz Boali N100 - Floresta, Itaipé/MG");
 
-           usuarioRepository.save(usuarioAdmin);
-//            usuarioService.salvar(modelMapper.map(usuarioAdmin, UsuarioDTO.class));
+//            usuarioRepository.save(usuarioAdmin);
+           usuarioService.salvar(modelMapper.map(usuarioAdmin, UsuarioDTO.class));
 //            clienteService.salvar(modelMapper.map(usuarioComum, ClienteDTO.class));
 
 
