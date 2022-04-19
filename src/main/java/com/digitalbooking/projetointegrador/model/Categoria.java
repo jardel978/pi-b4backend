@@ -37,7 +37,10 @@ public class Categoria implements Serializable {
     private String nome;
 
     private String qualificacao;
+
+    @Column(length = 3000)
     private String descricao;
+
     private String urlImagem;
 
     @JsonIgnore

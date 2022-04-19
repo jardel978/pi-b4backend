@@ -3,6 +3,7 @@ package com.digitalbooking.projetointegrador.dto;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -20,5 +21,7 @@ public class ProdutoMixReserva implements Serializable {
     private CidadeDTO cidade;
 
     private CategoriaDTO categoria;
+
+    private Set<ImagemDTO> imagens;
 
 }

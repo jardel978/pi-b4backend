@@ -2,7 +2,9 @@ package com.digitalbooking.projetointegrador.controller;
 
 import com.digitalbooking.projetointegrador.controller.exception.CampoInvalidoException;
 import com.digitalbooking.projetointegrador.dto.ProdutoDTO;
+import com.digitalbooking.projetointegrador.dto.ScoreDTO;
 import com.digitalbooking.projetointegrador.service.ProdutoService;
+import com.digitalbooking.projetointegrador.service.ScoreService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -42,6 +44,9 @@ public class ProdutoController {
 
     @Autowired
     private ProdutoService produtoService;
+
+    @Autowired
+    private ScoreService scoreService;
 
     /**
      * Metodo para salvar um produto.
@@ -203,6 +208,33 @@ public class ProdutoController {
     @GetMapping("/permitAll")
     public ResponseEntity<Page<ProdutoDTO>> buscarTodos(@ParameterObject Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(produtoService.buscarTodos(pageable));
+    }
+
+    /**
+     * Metodo para salvar a avaliação de um produto dada por um cliente.
+     *
+     * @param scoreDTO Objeto DTO contendo informações do Score a ser salvo e relacionado a um produto
+     * @return Response HTTP personalizada com HttpStatus 201.
+     * @since 1.0
+     */
+    //SpringDoc documentação
+    @Operation(summary = "Adiciona uma avaliação de um cliente a um produto")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Avaliação salva"),
+            @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "403", description = "Você não tem permissão para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "404", description = "Produto ou Cliente não localizados na base de dados",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção", content = @Content(schema =
+            @Schema(implementation = HandlerError.class))),
+    })
+    @PostMapping("/clientes/avaliar")
+    public ResponseEntity<?> clienteAvaliarProduto(
+            @Parameter(description = "Objeto ScoreDTO contendo informações do score a ser salvo") @RequestBody ScoreDTO scoreDTO) {
+        scoreService.salvar(scoreDTO);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     /**

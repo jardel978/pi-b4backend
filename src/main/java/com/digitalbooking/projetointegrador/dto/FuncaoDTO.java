@@ -6,7 +6,6 @@ import lombok.*;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Set;
 
 /**
  * Classe para transporte de dados entre as camadas de service, controller e entre cliente e servidor.

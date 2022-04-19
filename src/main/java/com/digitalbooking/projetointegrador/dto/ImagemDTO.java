@@ -27,4 +27,6 @@ public class ImagemDTO implements Serializable {
     @NotNull(message = "A url da imagem é obrigatória")
     private String url;
 
+    private boolean ehImagemCapa;
+
 }

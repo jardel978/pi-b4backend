@@ -31,20 +31,18 @@ public class JwtFiltroValidacao extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } else {
             String authorizationHeader = request.getHeader(AUTHORIZATION);//token com o prefixo Bearer
-//            if (jwtUtil.validarToken(authorizationHeader)) {
             if (authorizationHeader != null && authorizationHeader.startsWith(ATRIBUTO_PREFIXO)) {
                 try {
                     SecurityContextHolder.getContext().setAuthentication(
                             jwtUtil.pegarAtenticacao(authorizationHeader));
                     filterChain.doFilter(request, response);
                 } catch (Exception e) {
-//                    String erroEmToken = jwtUtil.capturarErroEmToken(authorizationHeader);
                     response.setHeader("error", "erro de validação");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//setando status 401
                     HandlerError error = HandlerError
                             .builder()
                             .status(UNAUTHORIZED.value())
-                            .mensagem(authorizationHeader == null ? e.getMessage() : jwtUtil.capturarErroEmToken(authorizationHeader))
+                            .mensagem(jwtUtil.capturarErroEmToken(authorizationHeader) + ". Error: " + e.getMessage())
                             .data(new Date())
                             .path(request.getRequestURI())
                             .build();
@@ -52,14 +50,10 @@ public class JwtFiltroValidacao extends OncePerRequestFilter {
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     ObjectMapper mapper = new ObjectMapper();
                     response.getWriter().write(mapper.writeValueAsString(error));
-//                    throw new GenericoTokenException("Erro! Token inválido ou não informado.");
                 }
             } else {
                 filterChain.doFilter(request, response);
             }
-//            } else {
-
-//            }
         }
     }
 }

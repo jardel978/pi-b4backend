@@ -11,6 +11,12 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.io.Serializable;
 
+/**
+ * Classe para mapeamento da entidade DataReservada
+ *
+ * @version 1.0
+ * @since 1.0
+ */
 @Entity
 @Getter
 @Setter
@@ -24,7 +30,7 @@ public class DataReservada implements Serializable {
     @EmbeddedId
     private DataReservadaPK id = new DataReservadaPK();
 
-    @Column(name = "quantidade_reservas")
+    @Column(name = "qtd_pessoas")
     private int qdtPessoasReservadas;
 
 }

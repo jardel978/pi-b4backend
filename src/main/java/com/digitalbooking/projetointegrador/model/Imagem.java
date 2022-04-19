@@ -37,4 +37,7 @@ public class Imagem implements Serializable {
     @JoinColumn(name = "produto_id", foreignKey = @ForeignKey(name = "fk_produto_imagem"))
     private Produto produto;
 
+    @Column(name = "img_capa")
+    private boolean ehImagemCapa;
+
 }

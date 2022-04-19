@@ -1,5 +1,6 @@
 package com.digitalbooking.projetointegrador.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -10,6 +11,13 @@ import org.springframework.stereotype.Service;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+/**
+ * Classe de service para envio de emails.
+ *
+ * @version 1.0
+ * @since 1.0
+ */
+@Slf4j//logging com lombok
 @Service
 public class EmailService {
 
@@ -20,9 +28,9 @@ public class EmailService {
     public void enviarEmail(MimeMessage messagem) {
         try {
             javaMailSender.send(messagem);
-            System.out.println("Email enviado com sucesso");
+            log.info("Email enviado com sucesso");
         } catch (MailException e) {
-            e.printStackTrace();
+            log.debug("Error ao enviar email", e.getMessage());
         }
     }
 

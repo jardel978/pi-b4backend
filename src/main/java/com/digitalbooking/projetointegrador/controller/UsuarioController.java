@@ -1,8 +1,10 @@
 package com.digitalbooking.projetointegrador.controller;
 
 import com.digitalbooking.projetointegrador.controller.exception.CampoInvalidoException;
+import com.digitalbooking.projetointegrador.dto.ClienteDTO;
 import com.digitalbooking.projetointegrador.dto.NovaSenhaDTO;
 import com.digitalbooking.projetointegrador.dto.UsuarioDTO;
+import com.digitalbooking.projetointegrador.service.ClienteService;
 import com.digitalbooking.projetointegrador.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,6 +47,9 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    @Autowired
+    private ClienteService clienteService;
+
     /**
      * Metodo para salvar um usuario.
      *
@@ -79,7 +84,7 @@ public class UsuarioController {
      * Metodo que faz a busca de todos os usuarios.
      *
      * @param pageable Interface abstrata para informacoes de paginacao.
-     * @return Paginacao com usuarios já convertidos de Usuario para UsuariosDTO.
+     * @return Paginacao com usuarios já convertidos de Usuario para UsuarioDTO.
      * @since 1.0
      */
     //SpringDoc documentação
@@ -96,6 +101,29 @@ public class UsuarioController {
     @GetMapping
     public ResponseEntity<Page<UsuarioDTO>> buscarTodos(@ParameterObject Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(usuarioService.buscarTodos(pageable));
+    }
+
+    /**
+     * Metodo que faz a busca de todos os clientes.
+     *
+     * @param pageable Interface abstrata para informacoes de paginacao.
+     * @return Paginacao com clientes já convertidos de Cliente para ClienteDTO.
+     * @since 1.0
+     */
+    //SpringDoc documentação
+    @Operation(summary = "Retorna todos os clientes paginados")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Clientes encontrados"),
+            @ApiResponse(responseCode = "401", description = "Autenticação necessária para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "403", description = "Você não tem permissão para acessar este recurso",
+                    content = @Content(schema = @Schema(implementation = HandlerError.class))),
+            @ApiResponse(responseCode = "500", description = "Foi gerada uma exceção", content = @Content(schema =
+            @Schema(implementation = HandlerError.class))),
+    })
+    @GetMapping("/buscar-clientes")
+    public ResponseEntity<Page<ClienteDTO>> buscarTodosClientes(@ParameterObject Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK).body(clienteService.buscarTodos(pageable));
     }
 
     /**
@@ -217,7 +245,7 @@ public class UsuarioController {
         String textoLink = "Clique aqui para voltar ao site!";
 
         if (resultadoValidacao.contains("sucesso")) {
-            linkMensagem = "http://localhost:3000/login";
+            linkMensagem = "http://3.95.14.243/login";
             textoLink = "Clique aqui e faça login!";
         }
 

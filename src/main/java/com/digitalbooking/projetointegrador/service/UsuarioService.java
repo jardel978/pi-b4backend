@@ -73,15 +73,14 @@ public class UsuarioService implements UserDetailsService {
         usuarioModel.setUsuarioEstaValidado(false);
         Usuario usuarioSalvo = usuarioRepository.saveAndFlush(usuarioModel);
         String tokenValidacao = jwtUtil.gerarTokenDeValidacaoDeRegistro(usuarioSalvo);//gerando token
-        System.out.println("Token gerado: " + tokenValidacao);
         emailService.enviarEmail(emailService.gerarEmailDeValidacao(tokenValidacao, usuarioSalvo.getEmail()));
     }
 
     /**
-     * Metodo para busca de todos os usuarios.
+     * Metodo que faz a busca de todos os clientes.
      *
      * @param pageable Interface abstrata para informacoes de paginacao.
-     * @return Paginacao com usuarios já convertidos de Usuario para UsuarioDTO.
+     * @return Paginacao com usuarios já convertidos de Cliente para ClienteDTO.
      * @since 1.0
      */
     public Page<UsuarioDTO> buscarTodos(Pageable pageable) {
@@ -168,7 +167,6 @@ public class UsuarioService implements UserDetailsService {
 
         if (erroEmToken.contains("expirado") && !usuario.isEnabled()) {//token expirado e usuário ainda não validado
             String tokenValidacao = jwtUtil.gerarTokenDeValidacaoDeRegistro(usuario);//gerando token
-            System.out.println("Token gerado: " + tokenValidacao);
             emailService.enviarEmail(emailService.gerarEmailDeValidacao(tokenValidacao, usuario.getEmail()));
             return "Link de validação expirado! Confira seu email, em instantes enviaremos um novo link.";
         }

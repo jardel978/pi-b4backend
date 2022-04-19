@@ -36,7 +36,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final String[] ROLES_ADMIN = {"ROLE_ADMIN"};
 
     private static final String[] ROTAS_USER = {"/reservas/cliente/**", "/clientes/**", "/usuarios/atualizar/alterar" +
-            "-senha"};
+            "-senha", "/produtos/clientes/avaliar", "/pagamentos"};
 
     private static final String[] ROTAS_ADMIN = {"/usuarios/**", "/reservas/**", "/produtos/**", "/imagens/**",
             "/funcoes/**", "/clientes/**", "/cidades/**", "/categorias/**", "/caracteristicas/**"};
@@ -77,13 +77,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests().antMatchers(DELETE, ROTAS_ADMIN).hasAnyAuthority(ROLES_ADMIN);
 
         http.authorizeRequests().anyRequest().authenticated();
-//        http.formLogin();
         http.addFilter(new JwtFiltroAutenticacao(authenticationManagerBean()));
         http.addFilterBefore(new JwtFiltroValidacao(), UsernamePasswordAuthenticationFilter.class);
         http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint);//para erros na autenticação
         http.exceptionHandling().accessDeniedHandler(accessDeniedHandler);//para erros na validação
 
     }
+
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {

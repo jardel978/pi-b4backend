@@ -7,12 +7,16 @@ import com.digitalbooking.projetointegrador.model.enums.NomeFuncao;
 import com.digitalbooking.projetointegrador.repository.IClienteRepository;
 import com.digitalbooking.projetointegrador.security.JwtUtil;
 import com.digitalbooking.projetointegrador.service.exception.DadoNaoEncontradoException;
+import com.digitalbooking.projetointegrador.service.exception.ReservaNaoFinalizadaException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
+import java.time.LocalDate;
 
 /**
  * Classe de service para <strong>Cliente</strong>.
@@ -22,7 +26,6 @@ import javax.mail.MessagingException;
  */
 
 @Service
-//public class ClienteService extends UsuarioService {
 public class ClienteService {
 
     @Autowired
@@ -51,12 +54,23 @@ public class ClienteService {
         clienteModel.setSenha(passwordEncoder.encode(clienteModel.getSenha()));
         clienteModel.setUsuarioEstaValidado(false);
         Cliente clienteSalvo = clienteRepository.saveAndFlush(clienteModel);
-        System.out.println("token validação cliente: " + jwtUtil.gerarTokenDeValidacaoDeRegistro(clienteSalvo));//gerando token
         String tokenValidacao = jwtUtil.gerarTokenDeValidacaoDeRegistro(clienteSalvo);//gerando token
         emailService.enviarEmail(emailService.gerarEmailDeValidacao(tokenValidacao, clienteSalvo.getEmail()));
     }
 
     //BUSCAR TODOS PARA USO ADMIN
+
+    /**
+     * Metodo para busca de todos os clientes.
+     *
+     * @param pageable Interface abstrata para informacoes de paginacao.
+     * @return Paginacao com clientes já convertidos de Cliente para ClienteDTO.
+     * @since 1.0
+     */
+    public Page<ClienteDTO> buscarTodos(Pageable pageable) {
+        Page<Cliente> pageClientes = clienteRepository.findAll(pageable);
+        return pageClientes.map(cliente -> modelMapper.map(cliente, ClienteDTO.class));
+    }
 
     /**
      * Metodo para busca de cliente por id.
@@ -99,10 +113,20 @@ public class ClienteService {
      * @since 1.0
      */
     public void deletar(Long id) {
-        clienteRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException("Cliente não " +
-                "encontrado. Tipo: " + Usuario.class.getName()));
-        //implementar lógica de verificar se o cliente pode ser deletado
+        Cliente clienteModel = clienteRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException(
+                "Cliente não " +
+                        "encontrado. Tipo: " + Usuario.class.getName()));
 
+        if (!clienteModel.getReservas().isEmpty()) {//caso tenha, verificar se esse cliente não possui reservas que
+            // só serão finalizadas futuramente
+            clienteModel.getReservas().forEach(reserva -> {
+                if (reserva.getDataFinal().isAfter(LocalDate.now())) {
+                    throw new ReservaNaoFinalizadaException("Falha ao excluir conta! O cliente " +
+                            clienteModel.getNome() + " " + clienteModel.getSobrenome() + " possui reservas em aberto.");
+                }
+            });
+        }
         clienteRepository.deleteById(id);
     }
+
 }

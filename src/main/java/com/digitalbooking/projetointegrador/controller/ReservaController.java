@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -97,6 +98,7 @@ public class ReservaController {
      * Metodo que faz a busca de todas as reservas.
      *
      * @param emailCliente Email do cliente o qual queremos retornar todas as suas reservas.
+     * @param request      Requisicao do cliente e contem as informacoes ao seu respeito
      * @return Response HTTP personalizada contendo HttpStatus 200 e uma lista de reservas em seu corpo.
      * @since 1.0
      */
@@ -113,9 +115,10 @@ public class ReservaController {
     })
     @GetMapping("/cliente/buscar")
     public ResponseEntity<List<ReservaDTO>> buscarTodosDeUmCliente(
+            HttpServletRequest request,
             @Parameter(description = "Email do cliente o qual queremos retornar todas as suas reservas")
             @RequestParam(value = "email-cliente") String emailCliente) {
-        return ResponseEntity.status(HttpStatus.OK).body(reservaService.buscarTodosDeUmCliente(emailCliente));
+        return ResponseEntity.status(HttpStatus.OK).body(reservaService.buscarTodosDeUmCliente(request, emailCliente));
     }
 
     /**

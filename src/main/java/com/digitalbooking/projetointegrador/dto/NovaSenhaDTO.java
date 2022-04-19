@@ -7,6 +7,13 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 
+
+/**
+ * Classe para uso na atualizacao da senha de um usuario
+ *
+ * @version 1.0
+ * @since 1.0
+ */
 @Getter
 @Setter
 @Builder

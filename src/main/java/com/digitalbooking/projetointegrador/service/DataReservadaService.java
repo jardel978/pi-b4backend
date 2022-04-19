@@ -24,7 +24,6 @@ import java.util.List;
 public class DataReservadaService {
 
     private static final long RECORRENCIA_PARA_EXCLUIR_REGISTROS_DATA_RESERVADA = 1000L * 60 * 60 * 24 * 30;//30 dias
-//    private static final long RECORRENCIA_PARA_EXCLUIR_REGISTROS_DATA_RESERVADA = 1000L * 30;//10s
 
     @Autowired
     private IDataReservadaRepository dataReservadaRepository;
@@ -44,9 +43,7 @@ public class DataReservadaService {
         listaDeDatasUmMesAnteriorDaDataInicial.forEach(data -> {
             List<DataReservada> datasReservadas = dataReservadaRepository.findAllByIdData(data);//buscar todas as datas já passadas
             if (!datasReservadas.isEmpty()) {
-                datasReservadas.forEach(dataParaExcluir -> {
-                    dataReservadaRepository.deleteById(dataParaExcluir.getId());
-                });
+                datasReservadas.forEach(dataParaExcluir -> dataReservadaRepository.deleteById(dataParaExcluir.getId()));
             }
         });
     }

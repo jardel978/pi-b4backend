@@ -1,14 +1,15 @@
 package com.digitalbooking.projetointegrador.service;
 
 import com.digitalbooking.projetointegrador.dto.ReservaDTO;
+import com.digitalbooking.projetointegrador.dto.UsuarioMixReservaDTO;
 import com.digitalbooking.projetointegrador.model.*;
 import com.digitalbooking.projetointegrador.repository.IDataReservadaRepository;
 import com.digitalbooking.projetointegrador.repository.IProdutoRepository;
 import com.digitalbooking.projetointegrador.repository.IReservaRepository;
 import com.digitalbooking.projetointegrador.repository.IUsuarioRepository;
-import com.digitalbooking.projetointegrador.service.exception.DadoNaoEncontradoException;
-import com.digitalbooking.projetointegrador.service.exception.DataIndisponivelReservaException;
-import com.digitalbooking.projetointegrador.service.exception.ReservaNaoFinalizadaException;
+import com.digitalbooking.projetointegrador.security.JwtUtil;
+import com.digitalbooking.projetointegrador.security.exception.GenericoTokenException;
+import com.digitalbooking.projetointegrador.service.exception.*;
 import com.digitalbooking.projetointegrador.utils.DatasUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.digitalbooking.projetointegrador.security.JwtFiltroValidacao.ATRIBUTO_PREFIXO;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 /**
  * Classe de service para <strong>Reserva</strong>.
@@ -48,6 +53,9 @@ public class ReservaService {
 
     @Autowired
     private DatasUtil datasUtil;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     //CREATE
 
@@ -87,7 +95,11 @@ public class ReservaService {
                     listaDatasReservadasLivres.add(new DataReservada(id, reservaDTO.getQtdPessoas()));
                 }
             });
-        }
+        } else
+            throw new RegraDeNegocioVioladaException("Falha ao gerar reserva! A quantidade de pessoas informada " +
+                    "excede o limite diário de pessoas no camping. " + "Limite diário: " + produto.getLimitePessoasPorDia() + " - Quantidade " +
+                    "informada: " + reservaDTO.getQtdPessoas());
+
         if (possiveisDatasIndisponiveis.isEmpty()) {
             listaDatasReservadasLivres.forEach(data -> dataReservadaRepository.save(data));
             reservaModel.setCliente((Cliente) usuario);
@@ -108,19 +120,40 @@ public class ReservaService {
      */
     public Page<ReservaDTO> buscarTodos(Pageable pageable) {
         Page<Reserva> listaReservas = reservaRepository.findAll(pageable);
-        return listaReservas.map(reservaModel -> modelMapper.map(reservaModel, ReservaDTO.class));
+        return listaReservas.map(reservaModel -> {
+            UsuarioMixReservaDTO usuarioMixReservaDTO = modelMapper.map(//gerando UsuarioMixReservaDTO para setar na reserva
+                    reservaModel.getCliente(), UsuarioMixReservaDTO.class);
+            ReservaDTO reservaDTO = modelMapper.map(reservaModel, ReservaDTO.class);
+            reservaDTO.setUsuario(usuarioMixReservaDTO);
+            return reservaDTO;
+        });
     }
 
     /**
      * Metodo para busca de todas as reservas de um determina cliente.
      *
-     * @param emailCliente Email do cliente o qual queremos retormar todas as suas reservas
+     * @param emailCliente Email do cliente o qual queremos retornar todas as suas reservas
      * @return Lista com todas as reservas de um determinado cliente já convertidas de Reserva para ReservaDTO.
      * @since 1.0
      */
-    public List<ReservaDTO> buscarTodosDeUmCliente(String emailCliente) {
-        List<Reserva> listaReservas = reservaRepository.findAllByClienteEmail(emailCliente);
-        return listaReservas.stream().map(reservaModel -> modelMapper.map(reservaModel, ReservaDTO.class)).collect(Collectors.toList());
+    public List<ReservaDTO> buscarTodosDeUmCliente(HttpServletRequest request, String emailCliente) {
+        String authorizationHeader = request.getHeader(AUTHORIZATION);
+        if (authorizationHeader != null && authorizationHeader.startsWith(ATRIBUTO_PREFIXO)) {
+            if (jwtUtil.validarToken(authorizationHeader)) {
+                String emailToken = jwtUtil.pegarEmailUsuarioViaToken(authorizationHeader);
+                if (emailToken.equals(emailCliente)) {
+                    List<Reserva> listaReservas = reservaRepository.findAllByClienteEmail(emailCliente);
+                    return listaReservas.stream().map(reservaModel -> modelMapper.map(reservaModel, ReservaDTO.class)).collect(Collectors.toList());
+                } else
+                    throw new RegraDeSegurancaVioladaException("Falha ao buscar reservas do cliente com email: " +
+                            emailCliente + ". O email informado não condiz com o email encontrado no token de segurança.");
+            } else {
+                String erroEmToken = jwtUtil.capturarErroEmToken(authorizationHeader);
+                throw new GenericoTokenException(erroEmToken);
+            }
+        } else {
+            throw new RegraDeSegurancaVioladaException("É necessário enviar um token para validar o email informado");
+        }
     }
 
     //UPDATE
@@ -157,6 +190,5 @@ public class ReservaService {
         }
         reservaRepository.deleteById(id);
     }
-
 
 }

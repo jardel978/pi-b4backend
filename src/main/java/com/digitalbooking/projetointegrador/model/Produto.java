@@ -32,7 +32,7 @@ public class Produto implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-      @Id
+    @Id
     @Column(name = "produto_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -56,7 +56,6 @@ public class Produto implements Serializable {
     @OneToMany(mappedBy = "produto", orphanRemoval = true)
     private Set<Imagem> imagens = new HashSet<>();
 
-    @Column(unique = true)
     private String endereco;
 
     @ManyToOne
@@ -91,6 +90,5 @@ public class Produto implements Serializable {
 
     @Transient//indica que esse campo não será persistido
     private List<LocalDate> datasIndisponiveis = new ArrayList<>();
-
 
 }

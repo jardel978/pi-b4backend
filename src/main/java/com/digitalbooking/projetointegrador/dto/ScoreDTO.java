@@ -9,10 +9,12 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReservaMixProdutoDTO implements Serializable {
+public class ScoreDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private Long id;
+    private Long idProduto;
+    private Long idCliente;
+    private Double valor;
 
 }

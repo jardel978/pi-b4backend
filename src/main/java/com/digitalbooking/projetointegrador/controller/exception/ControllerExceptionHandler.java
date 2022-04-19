@@ -4,6 +4,7 @@ import com.digitalbooking.projetointegrador.controller.HandlerError;
 import com.digitalbooking.projetointegrador.security.exception.GenericoTokenException;
 import com.digitalbooking.projetointegrador.security.exception.TokenExpiradoException;
 import com.digitalbooking.projetointegrador.service.exception.*;
+import com.stripe.exception.StripeException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -244,6 +245,93 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
                                                                       HttpServletRequest request) {
         HandlerError error = HandlerError.builder()
                 .status(HttpStatus.CONFLICT.value())
+                .mensagem(e.getMessage())
+                .data(new Date())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Metodo que para tratar excecoes do tipo: RegraDeSegurancaVioladaException.
+     *
+     * @param e       Excecao que foi interceptada.
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito.
+     * @return Response HTTP personalizada com HttpStatus 400 e um objeto HandlerError contendo informacoes do erro
+     * ocorrido.
+     * @since 1.0
+     */
+    @ExceptionHandler(RegraDeSegurancaVioladaException.class)
+    public ResponseEntity<HandlerError> regraDeSegurancaVioladaException(RegraDeSegurancaVioladaException e,
+                                                                         HttpServletRequest request) {
+        HandlerError error = HandlerError.builder()
+                .status(HttpStatus.CONFLICT.value())
+                .mensagem(e.getMessage())
+                .data(new Date())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Metodo que para tratar excecoes do tipo: Exception (genericas).
+     *
+     * @param e       Excecao que foi interceptada.
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito.
+     * @return Response HTTP personalizada com HttpStatus 403 e um objeto HandlerError contendo informacoes do erro
+     * ocorrido.
+     * @since 1.0
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<HandlerError> exception(Exception e, HttpServletRequest request) {
+        HandlerError error = HandlerError.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .mensagem(e.getMessage())
+                .data(new Date())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Metodo que para tratar excecoes do tipo: RegraDeNegocioVioladaException.
+     *
+     * @param e       Excecao que foi interceptada.
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito.
+     * @return Response HTTP personalizada com HttpStatus 403 e um objeto HandlerError contendo informacoes do erro
+     * ocorrido.
+     * @since 1.0
+     */
+    @ExceptionHandler(RegraDeNegocioVioladaException.class)
+    public ResponseEntity<HandlerError> regraDeNegocioVioladaException(RegraDeNegocioVioladaException e,
+                                                                       HttpServletRequest request) {
+        HandlerError error = HandlerError.builder()
+                .status(HttpStatus.CONFLICT.value())
+                .mensagem(e.getMessage())
+                .data(new Date())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * Metodo que para tratar excecoes do tipo: StripeException.
+     *
+     * @param e       Excecao que foi interceptada.
+     * @param request Requisicao do cliente e contem as informacoes ao seu respeito.
+     * @return Response HTTP personalizada com HttpStatus 403 e um objeto HandlerError contendo informacoes do erro
+     * ocorrido.
+     * @since 1.0
+     */
+    @ExceptionHandler(StripeException.class)
+    public ResponseEntity<HandlerError> stripeException(StripeException e,
+                                                        HttpServletRequest request) {
+        HandlerError error = HandlerError.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
                 .mensagem(e.getMessage())
                 .data(new Date())
                 .path(request.getRequestURI())

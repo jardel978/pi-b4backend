@@ -59,17 +59,11 @@ public class ProdutoService {
      * @since 1.0
      */
     public void salvar(ProdutoDTO produtoDTO) {
-        Produto produtoModel = modelMapper.map(produtoDTO, Produto.class);
+        Produto produto = modelMapper.map(produtoDTO, Produto.class);
 
-        if (produtoDTO.getCidade().getId() == null) {
-            Cidade cidadeModel = cidadeRepository.saveAndFlush(produtoModel.getCidade());
-            produtoModel.setCidade(cidadeModel);
-        }
-        if (produtoDTO.getCategoria().getId() == null) {
-            Categoria categoriaModel = categoriaRepository.saveAndFlush(produtoModel.getCategoria());
-            produtoModel.setCategoria(categoriaModel);
-        }
-
+        Produto produtoModel = validarExistenciaDeCidadeECategoria(produto);
+        produtoModel.setQtdAvaliacoes(0);
+        produtoModel.setNotaDeAvaliacao(0.0);
         Produto produtoSalvo = produtoRepository.saveAndFlush(produtoModel);
 
         if (!produtoModel.getImagens().isEmpty()) {
@@ -90,8 +84,7 @@ public class ProdutoService {
         Produto produtoModel = produtoRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException(
                 "Produto não encontrado. Tipo: " + Produto.class.getName()));
 
-        ProdutoDTO produtoDTO = modelMapper.map(produtoModel, ProdutoDTO.class);
-        return produtoDTO;
+        return modelMapper.map(produtoModel, ProdutoDTO.class);
     }
 
     /**
@@ -100,6 +93,7 @@ public class ProdutoService {
      * @param nomeCidade  Nome da cidade a ser buscada.
      * @param dataInicial Data inicial a ser buscada.
      * @param dataFinal   Data final a ser buscada.
+     * @param qtdPessoasPretendidas Quantidade de pessoas pretendidas pelo cliente para a busca
      * @return Produtos disponíveis encontrados.
      */
     public List<ProdutoDTO> buscarPorCidadeDatas(String nomeCidade, LocalDate dataInicial, LocalDate dataFinal,
@@ -149,7 +143,6 @@ public class ProdutoService {
             return produto;
         }).collect(Collectors.toList());
 
-        //criar uma lógica para se caso produtosComDatasDisponiveis for vazia retornar uma sugestão de datas diferentes
         return produtosComDatasDisponiveis.stream().map(produto ->
                 modelMapper.map(produto, ProdutoDTO.class)).collect(Collectors.toList());
     }
@@ -207,21 +200,31 @@ public class ProdutoService {
      * @since 1.0
      */
     public void atualizar(ProdutoDTO produtoDTO) {
-        Produto produtoModel = modelMapper.map(produtoDTO, Produto.class);
+        Produto produto = modelMapper.map(produtoDTO, Produto.class);
 
         Produto produtoDaBase =
                 produtoRepository.findById(produtoDTO.getId()).orElseThrow(() -> new DadoNaoEncontradoException(
                         "Produto não encontrado. Tipo: " + Produto.class.getName()));
 
         produtoDaBase.getImagens().forEach(imagemDaBase -> {//verificando alterações nas imagens do produto
-            if (!produtoModel.getImagens().contains(imagemDaBase)) {//remove as imagens que não fazem mais relação
+            if (!produto.getImagens().contains(imagemDaBase)) {//remove as imagens que não fazem mais relação
                 // com o produto que está sendo atualizado
                 imagemDaBase.setProduto(null);
                 imagemRepository.save(imagemDaBase);
                 imagemRepository.deleteById(imagemDaBase.getId());
             }
         });
-        salvar(produtoDTO);
+        Produto produtoModel = validarExistenciaDeCidadeECategoria(produto);
+        produtoModel.setQtdAvaliacoes(produtoDaBase.getQtdAvaliacoes());
+        produtoModel.setNotaDeAvaliacao(produtoDaBase.getNotaDeAvaliacao());
+
+        Produto produtoAtualizado = produtoRepository.saveAndFlush(produtoModel);
+        if (!produtoAtualizado.getImagens().isEmpty()) {
+            produtoModel.getImagens().forEach(imagem -> {
+                imagem.setProduto(produtoAtualizado);
+                imagemRepository.save(imagem);
+            });
+        }
     }
 
     /**
@@ -244,7 +247,25 @@ public class ProdutoService {
                 }
             });
         }
-        //implementar relatório antes de deletar??
         produtoRepository.deleteById(id);
     }
+
+    private Produto validarExistenciaDeCidadeECategoria(Produto produto) {//se não exitam, ele cria e seta ao produto
+        if (produto.getCidade().getId() == null) {
+            Cidade cidadeModel = cidadeRepository.saveAndFlush(produto.getCidade());
+            produto.setCidade(cidadeModel);
+        } else {
+            cidadeRepository.findById(produto.getCidade().getId()).orElseThrow(() -> new DadoNaoEncontradoException(
+                    "Cidade não encontrada. Tipo: " + Cidade.class.getName()));
+        }
+        if (produto.getCategoria().getId() == null) {
+            Categoria categoriaModel = categoriaRepository.saveAndFlush(produto.getCategoria());
+            produto.setCategoria(categoriaModel);
+        } else {
+            categoriaRepository.findById(produto.getCategoria().getId()).orElseThrow(() -> new DadoNaoEncontradoException(
+                    "Categoria não encontrada. Tipo: " + Categoria.class.getName()));
+        }
+        return produto;
+    }
+
 }
