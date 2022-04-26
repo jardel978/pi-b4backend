@@ -5,10 +5,13 @@ import com.digitalbooking.projetointegrador.dto.OrdemDePagamentoDTO;
 import com.digitalbooking.projetointegrador.service.PagamentoService;
 import com.stripe.exception.StripeException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 /**
  * Classe de controller para criacao de ordens de Pagamentos.
@@ -27,6 +32,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/pagamentos")
+@Tag(name = "Pagamentos", description = "API REST Pagamentos")
+@SecurityRequirement(name = "apidigitalbooking")
 public class PagamentoController {
 
     @Autowired
@@ -53,8 +60,9 @@ public class PagamentoController {
                     content = @Content(schema = @Schema(implementation = HandlerError.class))),
     })
     @PostMapping
-    public ResponseEntity<?> carregarOrdemDePagamento(@RequestBody OrdemDePagamentoDTO ordemDTO,
-                                                      BindingResult bdResult) throws StripeException {
+    public ResponseEntity<?> carregarOrdemDePagamento(
+            @Parameter(description = "Dados para gerar a ordem de pagamento") @RequestBody @Valid OrdemDePagamentoDTO ordemDTO,
+            @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) throws StripeException {
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
 

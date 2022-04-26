@@ -83,16 +83,26 @@ public class ProdutoService {
     public ProdutoDTO buscarPorId(Long id) {
         Produto produtoModel = produtoRepository.findById(id).orElseThrow(() -> new DadoNaoEncontradoException(
                 "Produto não encontrado. Tipo: " + Produto.class.getName()));
+        List<DataReservada> datasReservadas = dataReservadaRepository.findAllByIdProdutoId(produtoModel.getId());
+        List<LocalDate> datasIndisponiveis = new ArrayList<>();
 
+        if (!datasReservadas.isEmpty()) {
+            datasReservadas.forEach(dataReservada -> {
+                if (produtoModel.getLimitePessoasPorDia() == dataReservada.getQdtPessoasReservadas()) {
+                    datasIndisponiveis.add(dataReservada.getId().getData());
+                }
+            });
+        }
+        produtoModel.setDatasIndisponiveis(datasIndisponiveis);
         return modelMapper.map(produtoModel, ProdutoDTO.class);
     }
 
     /**
      * Metodo que permite filtrar produtos por cidade e duas datas.
      *
-     * @param nomeCidade  Nome da cidade a ser buscada.
-     * @param dataInicial Data inicial a ser buscada.
-     * @param dataFinal   Data final a ser buscada.
+     * @param nomeCidade            Nome da cidade a ser buscada.
+     * @param dataInicial           Data inicial a ser buscada.
+     * @param dataFinal             Data final a ser buscada.
      * @param qtdPessoasPretendidas Quantidade de pessoas pretendidas pelo cliente para a busca
      * @return Produtos disponíveis encontrados.
      */
@@ -155,13 +165,20 @@ public class ProdutoService {
      * @since 1.0
      */
     public List<ProdutoDTO> buscarPorCategoria(String nomeCategoria) {
-        List<ProdutoDTO> listaProdutos = new ArrayList<>();
-
-        produtoRepository.findAllByCategoriaNomeContainsIgnoreCase(nomeCategoria).forEach(produtoModel -> {
-            ProdutoDTO produtoDTO = modelMapper.map(produtoModel, ProdutoDTO.class);
-            listaProdutos.add(produtoDTO);
-        });
-        return listaProdutos;
+        List<Produto> produtos = produtoRepository.findAllByCategoriaNomeContainsIgnoreCase(nomeCategoria);
+        return produtos.stream().map(produto -> {
+            List<LocalDate> datasIndisponiveis = new ArrayList<>();
+            List<DataReservada> datasReservadas = dataReservadaRepository.findAllByIdProdutoId(produto.getId());
+            if (!datasReservadas.isEmpty()) {
+                datasReservadas.forEach(dataReservada -> {
+                    if (produto.getLimitePessoasPorDia() == dataReservada.getQdtPessoasReservadas()) {
+                        datasIndisponiveis.add(dataReservada.getId().getData());
+                    }
+                });
+            }
+            produto.setDatasIndisponiveis(datasIndisponiveis);
+            return modelMapper.map(produto, ProdutoDTO.class);
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -172,13 +189,20 @@ public class ProdutoService {
      * @since 1.0
      */
     public List<ProdutoDTO> buscarPorCidade(String nomeCidade) {
-        List<ProdutoDTO> listaProdutos = new ArrayList<>();
-
-        produtoRepository.findAllByCidadeNomeContainsIgnoreCase(nomeCidade).forEach(produtoModel -> {
-            ProdutoDTO produtoDTO = modelMapper.map(produtoModel, ProdutoDTO.class);
-            listaProdutos.add(produtoDTO);
-        });
-        return listaProdutos;
+        List<Produto> produtos = produtoRepository.findAllByCidadeNomeContainsIgnoreCase(nomeCidade);
+        return produtos.stream().map(produto -> {
+            List<LocalDate> datasIndisponiveis = new ArrayList<>();
+            List<DataReservada> datasReservadas = dataReservadaRepository.findAllByIdProdutoId(produto.getId());
+            if (!datasReservadas.isEmpty()) {
+                datasReservadas.forEach(dataReservada -> {
+                    if (produto.getLimitePessoasPorDia() == dataReservada.getQdtPessoasReservadas()) {
+                        datasIndisponiveis.add(dataReservada.getId().getData());
+                    }
+                });
+            }
+            produto.setDatasIndisponiveis(datasIndisponiveis);
+            return modelMapper.map(produto, ProdutoDTO.class);
+        }).collect(Collectors.toList());
     }
 
     /**

@@ -26,7 +26,7 @@ public class PagamentoService {
         parametros.put("amount", ordemDTO.getValor());
         parametros.put("currency", ordemDTO.getMoeda());
         parametros.put("description", ordemDTO.getDescricao());
-        parametros.put("source", ordemDTO.getToken());
+        parametros.put("source", ordemDTO.getTokenId());
 
         Charge charge = Charge.create(parametros);
         return charge.getId();

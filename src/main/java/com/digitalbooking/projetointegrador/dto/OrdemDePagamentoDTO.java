@@ -25,10 +25,10 @@ public class OrdemDePagamentoDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull(message = "O valor é um campo obrigatário")
-    private Double valor;
+    private int valor;
 
     @NotNull(message = "O token é um campo obrigatário")
-    private String token;
+    private String tokenId;
 
     private String descricao;
 

@@ -16,5 +16,6 @@ import java.util.List;
 public interface IDataReservadaRepository extends JpaRepository<DataReservada, DataReservadaPK> {
 
     List<DataReservada> findAllByIdData(LocalDate data);
+    List<DataReservada> findAllByIdProdutoId(Long idProduto);
 
 }
