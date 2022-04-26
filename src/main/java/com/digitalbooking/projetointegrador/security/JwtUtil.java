@@ -34,7 +34,7 @@ public class JwtUtil implements Serializable {
     private static final long DATA_EXPIRACAO_REFRESH_TOKEN = 1000L * 60 * 60 * 24 * 30;//30dias
         private static final int TEMPO_EXPIRACAO_TOKEN_VALIDACAO = 1000 * 60 * 15;//15min
     public static final String PERMISSOES = "permissoes";
-    public static final String URL_VALIDACAO_REGISTRO = "http://3.238.12.89:8080/usuarios/permitAll/validar-registro/";
+    public static final String URL_VALIDACAO_REGISTRO = "https://pi-t2-g3.herokuapp.com/usuarios/permitAll/validar-registro/";
 
 
     public String gerarToken(Usuario usuario) {

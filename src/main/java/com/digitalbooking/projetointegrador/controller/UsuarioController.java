@@ -245,7 +245,7 @@ public class UsuarioController {
         String textoLink = "Clique aqui para voltar ao site!";
 
         if (resultadoValidacao.contains("sucesso")) {
-            linkMensagem = "http://3.95.14.243/login";
+            linkMensagem = "https://digital-booking.vercel.app/login";
             textoLink = "Clique aqui e faça login!";
         }
 
