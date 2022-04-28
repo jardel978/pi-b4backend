@@ -2,6 +2,7 @@ package com.digitalbooking.projetointegrador.controller;
 
 
 import com.digitalbooking.projetointegrador.controller.exception.CampoInvalidoException;
+import com.digitalbooking.projetointegrador.dto.PagamentoReservaDTO;
 import com.digitalbooking.projetointegrador.dto.ReservaDTO;
 import com.digitalbooking.projetointegrador.service.ReservaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -65,10 +66,10 @@ public class ReservaController {
     @PostMapping("/cliente/salvar")
     public ResponseEntity<?> salvar(@Parameter(description = "Reserva a ser salva na base de dados") @Valid @RequestBody ReservaDTO reservaDTO,
                                     @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) {
-        reservaService.salvar(reservaDTO);
+
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservaService.salvar(reservaDTO));
     }
 
     /**
@@ -143,12 +144,13 @@ public class ReservaController {
     })
     @Transactional
     @PutMapping("/cliente/atualizar")
-    public ResponseEntity<?> atualizar(@Parameter(description = "Reserva a ser atualizada na base de dados") @Valid @RequestBody ReservaDTO reservaDTO,
+    public ResponseEntity<?> atualizar(@Parameter(description = "Reserva a ser atualizada seu status na base de " +
+            "dados") @Valid @RequestBody PagamentoReservaDTO pagamentoReservaDTO,
                                        @Parameter(description = "Interface geral para validação de dados recebidos") BindingResult bdResult) {
-        reservaService.atualizar(reservaDTO);
         if (bdResult.hasErrors())
             throw new CampoInvalidoException(bdResult.getAllErrors().get(0).getDefaultMessage());
 
+        reservaService.atualizar(pagamentoReservaDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

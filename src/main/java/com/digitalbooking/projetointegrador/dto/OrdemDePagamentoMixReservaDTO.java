@@ -1,24 +1,27 @@
 package com.digitalbooking.projetointegrador.dto;
 
-import com.digitalbooking.projetointegrador.model.Reserva;
 import com.digitalbooking.projetointegrador.model.enums.Moeda;
+import com.digitalbooking.projetointegrador.model.enums.StatusReserva;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
- * Classe para criacao de ordens de pagamentos
+ * Classe para transporte de dados (DTO) entre as camadas de service, controller e entre cliente e servidor.
  *
  * @version 1.0
  * @since 1.0
  */
+
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrdemDePagamentoDTO implements Serializable {
+public class OrdemDePagamentoMixReservaDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -36,7 +39,5 @@ public class OrdemDePagamentoDTO implements Serializable {
 
     @NotNull(message = "A moeda deve ser informada")
     private Moeda moeda;
-
-    private Reserva reserva;
 
 }

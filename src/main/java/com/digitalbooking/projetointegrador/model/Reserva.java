@@ -1,5 +1,6 @@
 package com.digitalbooking.projetointegrador.model;
 
+import com.digitalbooking.projetointegrador.model.enums.StatusReserva;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -58,5 +59,13 @@ public class Reserva implements Serializable {
 
     @Column(name = "qtd_pessoas")
     private Integer qtdPessoas;
+
+    @Column(name = "valor_total")
+    private Double valorTotal;
+
+    private StatusReserva status;
+
+    @OneToOne
+    private OrdemDePagamento ordemDePagamento;
 
 }

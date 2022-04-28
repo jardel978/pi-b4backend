@@ -1,12 +1,11 @@
 package com.digitalbooking.projetointegrador.service;
 
+import com.digitalbooking.projetointegrador.dto.PagamentoReservaDTO;
 import com.digitalbooking.projetointegrador.dto.ReservaDTO;
 import com.digitalbooking.projetointegrador.dto.UsuarioMixReservaDTO;
 import com.digitalbooking.projetointegrador.model.*;
-import com.digitalbooking.projetointegrador.repository.IDataReservadaRepository;
-import com.digitalbooking.projetointegrador.repository.IProdutoRepository;
-import com.digitalbooking.projetointegrador.repository.IReservaRepository;
-import com.digitalbooking.projetointegrador.repository.IUsuarioRepository;
+import com.digitalbooking.projetointegrador.model.enums.StatusReserva;
+import com.digitalbooking.projetointegrador.repository.*;
 import com.digitalbooking.projetointegrador.security.JwtUtil;
 import com.digitalbooking.projetointegrador.security.exception.GenericoTokenException;
 import com.digitalbooking.projetointegrador.service.exception.*;
@@ -57,6 +56,9 @@ public class ReservaService {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private IOrdemPagamentoRepository ordemPagamentoRepository;
+
     //CREATE
 
     /**
@@ -65,7 +67,7 @@ public class ReservaService {
      * @param reservaDTO Reserva que deve ser persistida no banco de dados.
      * @since 1.0
      */
-    public void salvar(ReservaDTO reservaDTO) {
+    public ReservaDTO salvar(ReservaDTO reservaDTO) {
         Reserva reservaModel = modelMapper.map(reservaDTO, Reserva.class);
         //mapeando/convertendo um objeto do tipo ReservaDTO para Reserva
         Usuario usuario = usuarioRepository.findById(reservaDTO.getUsuario().getId()).orElseThrow(() ->
@@ -74,7 +76,6 @@ public class ReservaService {
                 new DadoNaoEncontradoException("O produto informado para a reserva não foi encontrado. Tipo: " + Produto.class.getName()));
         List<LocalDate> peridoDeDatas = datasUtil.gerarPeriodoDeDatas(reservaDTO.getDataInicio(), reservaDTO.getDataFinal());
         List<LocalDate> possiveisDatasIndisponiveis = new ArrayList<>();
-        List<DataReservada> listaDatasReservadasLivres = new ArrayList<>();
 
         if (reservaDTO.getQtdPessoas() <= produto.getLimitePessoasPorDia()) {//se número de vagas que a reserva pede for no máximo o limite de vagas do camping
             peridoDeDatas.forEach(data -> {
@@ -83,16 +84,9 @@ public class ReservaService {
                     boolean vagasDisponiveisComportamTodos =//quantidade de vagas disponíveis for maior ou igual a quantidade de vagas que a reserva pede
                             (produto.getLimitePessoasPorDia() - dataReservada.get().getQdtPessoasReservadas()) >= reservaDTO.getQtdPessoas();
 
-                    if (vagasDisponiveisComportamTodos) {//se data disponível
-                        dataReservada.get().setQdtPessoasReservadas(//somando a quantidade de pessoas existentes mais as novas para a nova reserva
-                                dataReservada.get().getQdtPessoasReservadas() + reservaDTO.getQtdPessoas());
-                        listaDatasReservadasLivres.add(dataReservada.get());
-                    } else {
+                    if (!vagasDisponiveisComportamTodos) {//se data indisponível
                         possiveisDatasIndisponiveis.add(data);
                     }
-                } else {
-                    DataReservadaPK id = new DataReservadaPK(data, produto);
-                    listaDatasReservadasLivres.add(new DataReservada(id, reservaDTO.getQtdPessoas()));
                 }
             });
         } else
@@ -100,13 +94,17 @@ public class ReservaService {
                     "excede o limite diário de pessoas no camping. " + "Limite diário: " + produto.getLimitePessoasPorDia() + " - Quantidade " +
                     "informada: " + reservaDTO.getQtdPessoas());
 
-        if (possiveisDatasIndisponiveis.isEmpty()) {
-            listaDatasReservadasLivres.forEach(data -> dataReservadaRepository.save(data));
-            reservaModel.setCliente((Cliente) usuario);
-            reservaRepository.save(reservaModel);
-        } else
+        if (!possiveisDatasIndisponiveis.isEmpty())
             throw new DataIndisponivelReservaException("O intervalo de datas escolhido possui dias indisponíveis. " +
                     "Datas indisponíveis: " + possiveisDatasIndisponiveis);
+
+        reservaModel.setCliente((Cliente) usuario);
+        reservaModel.setStatus(StatusReserva.PENDENTE);
+
+        UsuarioMixReservaDTO usuarioMixReservaDTO = modelMapper.map(usuario, UsuarioMixReservaDTO.class);
+        ReservaDTO reservaDTO1 = modelMapper.map(reservaRepository.saveAndFlush(reservaModel), ReservaDTO.class);
+        reservaDTO1.setUsuario(usuarioMixReservaDTO);
+        return reservaDTO1;
     }
 
     //READ
@@ -123,6 +121,10 @@ public class ReservaService {
         return listaReservas.map(reservaModel -> {
             UsuarioMixReservaDTO usuarioMixReservaDTO = modelMapper.map(//gerando UsuarioMixReservaDTO para setar na reserva
                     reservaModel.getCliente(), UsuarioMixReservaDTO.class);
+            if (reservaModel.getStatus().equals(StatusReserva.PAGO) && reservaModel.getDataFinal().isBefore(LocalDate.now())) {
+                reservaModel.setStatus(StatusReserva.FECHADO);
+                reservaRepository.save(reservaModel);
+            }
             ReservaDTO reservaDTO = modelMapper.map(reservaModel, ReservaDTO.class);
             reservaDTO.setUsuario(usuarioMixReservaDTO);
             return reservaDTO;
@@ -143,7 +145,13 @@ public class ReservaService {
                 String emailToken = jwtUtil.pegarEmailUsuarioViaToken(authorizationHeader);
                 if (emailToken.equals(emailCliente)) {
                     List<Reserva> listaReservas = reservaRepository.findAllByClienteEmail(emailCliente);
-                    return listaReservas.stream().map(reservaModel -> modelMapper.map(reservaModel, ReservaDTO.class)).collect(Collectors.toList());
+                    return listaReservas.stream().map(reservaModel -> {
+                        if (reservaModel.getStatus().equals(StatusReserva.PAGO) && reservaModel.getDataFinal().isBefore(LocalDate.now())) {
+                            reservaModel.setStatus(StatusReserva.FECHADO);
+                            reservaRepository.save(reservaModel);
+                        }
+                        return modelMapper.map(reservaModel, ReservaDTO.class);
+                    }).collect(Collectors.toList());
                 } else
                     throw new RegraDeSegurancaVioladaException("Falha ao buscar reservas do cliente com email: " +
                             emailCliente + ". O email informado não condiz com o email encontrado no token de segurança.");
@@ -161,14 +169,61 @@ public class ReservaService {
     /**
      * Metodo para atualizar uma Reserva.
      *
-     * @param reservaDTO Reserva a ser atualizada.
+     * @param pagamentoReservaDTO Reserva a ser atualizada seu status.
      * @since 1.0
      */
-    public void atualizar(ReservaDTO reservaDTO) {
-        reservaRepository.findById(reservaDTO.getId())
-                .orElseThrow(() -> new DadoNaoEncontradoException("Reserva não encontrada." +
-                        " Tipo: " + Reserva.class.getName()));
-        salvar(reservaDTO);
+    public void atualizar(PagamentoReservaDTO pagamentoReservaDTO) {
+        Reserva reservaDaBase = reservaRepository.findById(pagamentoReservaDTO.getReservaId()).orElseThrow(() ->
+                new DadoNaoEncontradoException("Reserva não encontrada. Tipo: " + Reserva.class.getName()));
+
+        OrdemDePagamento ordemDePagamento =
+                ordemPagamentoRepository.findById(pagamentoReservaDTO.getOrdemDePagamentoId()).orElseThrow(() ->
+                        new DadoNaoEncontradoException("Falha ao atualizar reserva. Ordem de pagamento não encontrada. Tipo:" + " " + Reserva.class.getName()));
+
+        if (reservaDaBase.getStatus().equals(StatusReserva.PENDENTE) &&
+                ordemDePagamento.getReserva().getId().equals(pagamentoReservaDTO.getReservaId())) {
+            List<LocalDate> peridoDeDatas = datasUtil.gerarPeriodoDeDatas(reservaDaBase.getDataInicio(), reservaDaBase.getDataFinal());
+            List<LocalDate> possiveisDatasIndisponiveis = new ArrayList<>();
+            List<DataReservada> listaDatasReservadasLivres = new ArrayList<>();
+
+            if (reservaDaBase.getQtdPessoas() <= reservaDaBase.getProduto().getLimitePessoasPorDia()) {//se número de
+                // vagas que a reserva pede for no máximo o limite de vagas do camping
+                peridoDeDatas.forEach(data -> {
+                    Optional<DataReservada> dataReservada = dataReservadaRepository.findById(new DataReservadaPK(data
+                            , reservaDaBase.getProduto()));
+                    if (dataReservada.isPresent()) {
+                        boolean vagasDisponiveisComportamTodos =//quantidade de vagas disponíveis for maior ou igual a quantidade de vagas que a reserva pede
+                                (reservaDaBase.getProduto().getLimitePessoasPorDia() - dataReservada.get().getQdtPessoasReservadas()) >= reservaDaBase.getQtdPessoas();
+
+                        if (vagasDisponiveisComportamTodos) {//se data disponível
+                            dataReservada.get().setQdtPessoasReservadas(//somando a quantidade de pessoas existentes mais as novas para a nova reserva
+                                    dataReservada.get().getQdtPessoasReservadas() + reservaDaBase.getQtdPessoas());
+                            listaDatasReservadasLivres.add(dataReservada.get());
+                        } else {
+                            possiveisDatasIndisponiveis.add(data);
+                        }
+                    } else {
+                        DataReservadaPK id = new DataReservadaPK(data, reservaDaBase.getProduto());
+                        listaDatasReservadasLivres.add(new DataReservada(id, reservaDaBase.getQtdPessoas()));
+                    }
+                });
+            } else
+                throw new RegraDeNegocioVioladaException("Falha ao gerar reserva! A quantidade de pessoas informada " +
+                        "excede o limite diário de pessoas no camping. " + "Limite diário: " + reservaDaBase.getProduto().getLimitePessoasPorDia() + " - Quantidade " +
+                        "informada: " + reservaDaBase.getQtdPessoas());
+
+            if (possiveisDatasIndisponiveis.isEmpty()) {
+                listaDatasReservadasLivres.forEach(data -> dataReservadaRepository.save(data));
+                reservaDaBase.setStatus(StatusReserva.PAGO);
+                reservaRepository.save(reservaDaBase);
+            } else {
+                reservaDaBase.setStatus(StatusReserva.CANCELADO);
+                reservaRepository.save(reservaDaBase);
+                throw new DataIndisponivelReservaException("Reserva cancelada pois o intervalo de datas escolhido não" +
+                        " se encontra mais disponível. Datas indisponíveis: " + possiveisDatasIndisponiveis);
+            }
+        }
+
     }
 
     //DELETE

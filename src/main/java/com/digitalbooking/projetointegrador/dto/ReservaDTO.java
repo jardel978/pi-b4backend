@@ -1,5 +1,6 @@
 package com.digitalbooking.projetointegrador.dto;
 
+import com.digitalbooking.projetointegrador.model.enums.StatusReserva;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;
@@ -42,5 +43,11 @@ public class ReservaDTO implements Serializable {
 
     @NotNull(message = "A quantidade de pessoas deve ser informada")
     private Integer qtdPessoas;
+
+    private Double valorTotal;
+
+    private StatusReserva status;
+
+    private OrdemDePagamentoMixReservaDTO ordemDePagamento;
 
 }
