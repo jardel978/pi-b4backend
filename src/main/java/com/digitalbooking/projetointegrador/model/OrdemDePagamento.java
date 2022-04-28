@@ -41,6 +41,7 @@ public class OrdemDePagamento implements Serializable {
 
     private String descricao;
 
+    @Enumerated(value = EnumType.STRING)
     private Moeda moeda;
 
     @OneToOne

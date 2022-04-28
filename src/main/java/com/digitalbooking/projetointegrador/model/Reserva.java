@@ -63,6 +63,7 @@ public class Reserva implements Serializable {
     @Column(name = "valor_total")
     private Double valorTotal;
 
+    @Enumerated(value = EnumType.STRING)
     private StatusReserva status;
 
     @OneToOne
