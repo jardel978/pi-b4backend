@@ -1,5 +1,6 @@
 package com.digitalbooking.projetointegrador.service;
 
+import com.digitalbooking.projetointegrador.dto.OrdemDePagamentoMixReservaDTO;
 import com.digitalbooking.projetointegrador.dto.PagamentoReservaDTO;
 import com.digitalbooking.projetointegrador.dto.ReservaDTO;
 import com.digitalbooking.projetointegrador.dto.UsuarioMixReservaDTO;
@@ -125,7 +126,12 @@ public class ReservaService {
                 reservaModel.setStatus(StatusReserva.FECHADO);
                 reservaRepository.save(reservaModel);
             }
+            OrdemDePagamentoMixReservaDTO ordemPagamentoDTO = null;
+            if (reservaModel.getOrdemDePagamento() != null)
+                ordemPagamentoDTO = modelMapper.map(reservaModel.getOrdemDePagamento(), OrdemDePagamentoMixReservaDTO.class);
+
             ReservaDTO reservaDTO = modelMapper.map(reservaModel, ReservaDTO.class);
+            reservaDTO.setOrdemDePagamento(ordemPagamentoDTO);
             reservaDTO.setUsuario(usuarioMixReservaDTO);
             return reservaDTO;
         });
@@ -150,7 +156,13 @@ public class ReservaService {
                             reservaModel.setStatus(StatusReserva.FECHADO);
                             reservaRepository.save(reservaModel);
                         }
-                        return modelMapper.map(reservaModel, ReservaDTO.class);
+                        OrdemDePagamentoMixReservaDTO ordemPagamentoDTO = null;
+                        if (reservaModel.getOrdemDePagamento() != null)
+                            ordemPagamentoDTO = modelMapper.map(reservaModel.getOrdemDePagamento(), OrdemDePagamentoMixReservaDTO.class);
+
+                        ReservaDTO reservaDTO = modelMapper.map(reservaModel, ReservaDTO.class);
+                        reservaDTO.setOrdemDePagamento(ordemPagamentoDTO);
+                        return reservaDTO;
                     }).collect(Collectors.toList());
                 } else
                     throw new RegraDeSegurancaVioladaException("Falha ao buscar reservas do cliente com email: " +
